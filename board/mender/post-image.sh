@@ -73,11 +73,29 @@ function make_data_partition(){
   ${HOST_DIR}/sbin/mkfs.ext4 -d ${BINARIES_DIR}/data_part -r 1 -N 0 -m 5 -L "data" -O ^64bit ${BINARIES_DIR}/data-part.ext4 "${DATA_PART_SIZE}"
 }
 
+
+function create_mender_image(){
+  echo "Creating ${BINARIES_DIR}/${1}"
+  ${HOST_DIR}/bin/mender-artifact \
+    --compression lzma \
+    write rootfs-image \
+    -t BUILDROOT_DEVICE \
+    -n ${BR2_VERSION} \
+    -f ${BINARIES_DIR}/rootfs.ext2 \
+    -o ${BINARIES_DIR}/${1}
+}
+
+make_data_partition
+
 genimage                           \
 	--rootpath "${ROOTPATH_TMP}"   \
 	--tmppath "${GENIMAGE_TMP}"    \
 	--inputpath "${BINARIES_DIR}"  \
 	--outputpath "${BINARIES_DIR}" \
 	--config "${GENIMAGE_CFG}"
+
+
+# Uncomment this line to generate a mender artifact after the image is built.
+# create_mender_image "buildroot-rasperrypi-${BR2_VERSION}.mender"
 
 exit $?
