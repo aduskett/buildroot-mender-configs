@@ -1,14 +1,17 @@
-#!/bin/sh -e
+#!/bin/sh
+
+set -ue
+
+# Prevent a double login prompt
+if [[ -d ${TARGET_DIR}/etc/systemd/system/getty.target.wants ]]; then
+    rm -rf ${TARGET_DIR}/etc/systemd/system/getty.target.wants
+fi
+
+# The mender package creates this directory as a link, and it should be a folder.
+mkdir -p ${TARGET_DIR}/run/mender
+if [[ -L ${TARGET_DIR}/data ]]; then
+  rm ${TARGET_DIR}/data
+fi 
+
 cd ${TARGET_DIR}
-
-# Create a persistent directory to mount the data partition at.
-if [[ -L var/lib/mender ]]; then
-  rm var/lib/mender
-  mkdir -p var/lib/mender
-fi
-
-# The common paradigm is to have the persistent data volume at /data for mender.
-if [[ ! -L data ]]; then
-    ln -s var/lib/mender data
-fi
-
+ln -s run/mender data
