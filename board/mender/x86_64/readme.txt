@@ -50,15 +50,18 @@ Optional arguments:
 
 The login prompt will appear in the serial window.
 
-Tested with QEMU 3.1.1 on Fedora 30
+Tested with QEMU 4.1.1 on Fedora 31
 
 Creating a mender-artifact
 ========================
-Edit board/mender/post-image-efi.sh and uncomment the line:
-create_mender_image "update-${BR2_VERSION}.mender" to create a mender file
-automatically at the end of a build.
+In menuconfig -> System configuration, edit the field
+"Extra arguments passed to custom scripts"
+And change --generate-mender-image=false to --generate-mender-image=true
+
+You may wish to change --artifact-name=1.0 to a name that best suits your
+particular needs, as this option changes the mender artifact name.
 
 Using mender
 ========================
 Please read the mender documentation at:
-https://docs.mender.io/2.0/getting-started
+https://docs.mender.io/2.2/getting-started

@@ -22,11 +22,4 @@ kernel_imagetype=bzImage
 # Type of initrd image.
 # Note: An initrd image is not strictly necessary, and the system will boot and
 #       update without a initrd image.
-initrd_imagetype=initrd.img
-
-################################################################################
-# Mandatory on ARM
-################################################################################
-
-# Basename of DTB that should be loaded by the bootloader.
-# kernel_devicetree=kernel.dtb
+# initrd_imagetype=initrd.img
