@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e
+
+# CLEAN_ALL, BUILD_ALL, and BUILD_LIST are set in the docker/env file.
+main() {
+  cd /mnt/docker
+  python3 -u ./init.py -e "${ENV_FILES}"
+}
+
+main "${@}"
+# This keeps the docker image from exiting.
+exec /bin/bash
+exit 0

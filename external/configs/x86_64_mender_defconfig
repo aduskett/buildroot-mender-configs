@@ -1,6 +1,12 @@
 # Architecture
 BR2_x86_64=y
 
+# Build settings
+BR2_DL_DIR="external/dl"
+BR2_CCACHE=y
+BR2_CCACHE_DIR="$(HOME)/ccache/x86_64"
+BR2_CCACHE_INITIAL_SETUP="--max-size=2G"
+
 # Toolchain, required for eudev (to autoload drivers)
 BR2_TOOLCHAIN_BUILDROOT_WCHAR=y
 # Required for sysvinit
@@ -20,7 +26,7 @@ BR2_PACKAGE_HOST_MTOOLS=y
 # Bootloader
 BR2_TARGET_GRUB2=y
 BR2_TARGET_GRUB2_X86_64_EFI=y
-BR2_TARGET_GRUB2_BUILTIN_MODULES="boot linux ext2 fat squash4 part_msdos part_gpt normal efi_gop loadenv hashsum echo halt gcry_sha256 test"
+BR2_TARGET_GRUB2_BUILTIN_MODULES="boot linux ext2 fat squash4 part_msdos part_gpt normal efi_gop loadenv hashsum echo halt gcry_sha256 test regexp"
 BR2_TARGET_GRUB2_INSTALL_TOOLS=y
 
 # Required tools to create a mender image
@@ -30,19 +36,20 @@ BR2_PACKAGE_HOST_MENDER_ARTIFACT=y
 # Filesystem / image
 BR2_TARGET_ROOTFS_EXT2=y
 BR2_TARGET_ROOTFS_EXT2_4=y
-BR2_TARGET_ROOTFS_EXT2_SIZE="128M"
+BR2_TARGET_ROOTFS_EXT2_SIZE="256M"
+BR2_TARGET_ROOTFS_EXT2_MKFS_OPTIONS="-O 64bit"
 # BR2_TARGET_ROOTFS_TAR is not set
-BR2_ROOTFS_OVERLAY="board/mender/x86_64/overlay"
-BR2_ROOTFS_POST_BUILD_SCRIPT="board/mender/x86_64/post-build.sh"
-BR2_ROOTFS_POST_IMAGE_SCRIPT="board/mender/x86_64/post-image-efi.sh"
-BR2_ROOTFS_POST_SCRIPT_ARGS="--data-part-size=32M --device-type=buildroot-x86_64 --generate-mender-image=false --artifact-name=1.0"
+BR2_ROOTFS_OVERLAY="external/board/x86_64/overlay"
+BR2_ROOTFS_POST_BUILD_SCRIPT="external/board/x86_64/post-build.sh"
+BR2_ROOTFS_POST_IMAGE_SCRIPT="external/board/x86_64/post-image-efi.sh"
+BR2_ROOTFS_POST_SCRIPT_ARGS="--data-part-size=32M --device-type=buildroot-x86_64 --generate-mender-image=true --artifact-name=2021.02.1"
 
 # Kernel
 BR2_LINUX_KERNEL=y
 BR2_LINUX_KERNEL_CUSTOM_VERSION=y
-BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="5.5.7"
+BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="5.10.35"
 BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG=y
-BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE="board/mender/x86_64/linux.config"
+BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE="external/board/x86_64/linux.config"
 BR2_LINUX_KERNEL_INSTALL_TARGET=y
 BR2_LINUX_KERNEL_NEEDS_HOST_OPENSSL=y
 
@@ -76,4 +83,4 @@ BR2_PACKAGE_CONNMAN_CLIENT=y
 BR2_PACKAGE_CONNMAN_WIFI=y
 BR2_PACKAGE_MENDER=y
 BR2_PACKAGE_MENDER_GRUBENV=y
-BR2_PACKAGE_MENDER_GRUBENV_DEFINES="board/mender/x86_64/mender_grubenv_defines"
+BR2_PACKAGE_MENDER_GRUBENV_DEFINES="external/board/x86_64/mender_grubenv_defines"

@@ -1,0 +1,23 @@
+config BR2_PACKAGE_MENDER_CONNECT
+	bool "mender-connect"
+	depends on BR2_PACKAGE_HOST_GO_TARGET_ARCH_SUPPORTS
+	depends on BR2_PACKAGE_HOST_GO_TARGET_CGO_LINKING_SUPPORTS
+	depends on BR2_TOOLCHAIN_HAS_THREADS # libglib
+	depends on BR2_USE_WCHAR # libglib -> gettext
+	depends on BR2_USE_MMU # dbus -> fork()
+	select BR2_PACKAGE_DBUS # runtime
+	select BR2_PACKAGE_LIBGLIB2
+	select BR2_PACKAGE_MENDER # runtime
+	select BR2_PACKAGE_OPENSSL
+	help
+	  A remote shell access add-on for Mender. It enhances the
+	  Mender client, allowing to log in to the devices remotely and
+	  start a shell in a remote terminal session.
+
+	  https://github.com/mendersoftware/mender-connect
+
+comment "mender-connect needs a toolchain w/ threads"
+	depends on BR2_PACKAGE_HOST_GO_TARGET_ARCH_SUPPORTS
+	depends on BR2_PACKAGE_HOST_GO_TARGET_CGO_LINKING_SUPPORTS
+	depends on !BR2_TOOLCHAIN_HAS_THREADS
+

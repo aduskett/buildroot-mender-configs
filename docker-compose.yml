@@ -1,0 +1,28 @@
+version: "3.7"
+services:
+   buildroot-mender-configs-build:
+    build:
+      context: ./
+      args:
+         BUILDROOT_USER: br-user
+         BUILDROOT_DIR: buildroot
+         BUILDROOT_VERSION: 2021.02.1
+         # BUILDROOT_VERSION: git
+         # BUILDROOT_BRANCH: master
+         # Space deliminated list of external trees of which to use.
+         EXTERNAL_TREES: external
+         BUILDROOT_PATCH_DIR: "external/patches/buildroot/"
+         UID: 1000
+         GID: 1000
+    env_file:
+      - docker/env
+    privileged: true
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./:/mnt
+      - buildroot-mender-configs-build-ccache:/home/ccache
+    image: buildroot-mender-configs-build:latest
+    container_name:  buildroot-mender-configs-build
+volumes:
+  buildroot-mender-configs-build-ccache:
