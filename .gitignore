@@ -1,5 +1,6 @@
 external/output/
 external/dl/
+external/images/
 __pycache__/
 *.pyc
 *.jks
