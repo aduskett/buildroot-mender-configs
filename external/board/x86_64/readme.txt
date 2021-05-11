@@ -52,6 +52,14 @@ The login prompt will appear in the serial window.
 
 Tested with QEMU 4.1.1 on Fedora 31
 
+II. Variant
+
+qemu-system-x86_64 \
+    -M pc \
+    -kernel output/images/bzImage \
+    -drive file=output/images/rootfs.ext4,if=virtio,format=raw \
+    -append 'root=/dev/vda rw mem=256M'
+
 Creating a mender-artifact
 ========================
 In menuconfig -> System configuration, edit the field

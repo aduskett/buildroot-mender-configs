@@ -89,7 +89,8 @@ If manually-building:
 
 - clone or download buildroot from: https://buildroot.org/
 - clone or download and extract this repository: `git clone git@github.com:aduskett/buildroot-docker-devel.git`
-- copy the external tree  to the buildroot directory: `cp buildroot-docker-devel/example-buildroot-project/external ./exteranl`
+- copy the external tree  to the buildroot directory: `cp buildroot-docker-devel/example-buildroot-project/external ./external`
+- create folder and copy file: `mkdir -p board/mender/x86_64/; cp external/board/x86_64/mender_grubenv_defines board/mender/x86_64/mender_grubenv_defines`
 - apply the config with the external tree: `BR2_EXTERNAL=./external make $your_defconfig`
 - Add or remove packages with `make menuconfig`
 - Build the project with `make`
