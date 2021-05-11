@@ -13,7 +13,11 @@
     "skip": false,
     "defconfig": "raspberrypi4_mender_defconfig",
     "external_trees": [{
-      "name": "external"
+      "name": "external",
+      "fragment_dir": "configs/fragments",
+      "fragments": [
+        "rpi-mender-grub-on-uboot.fragment"
+      ]
     }],
     "output_tree": "external",
     "config_dir_tree": "external",

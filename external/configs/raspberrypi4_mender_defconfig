@@ -5,17 +5,16 @@ BR2_DL_DIR="$(TOPDIR)/external/dl"
 BR2_CCACHE=y
 BR2_CCACHE_DIR="$(HOME)/ccache/raspberrypi4"
 BR2_CCACHE_INITIAL_SETUP="--max-size=5G"
-BR2_GLOBAL_PATCH_DIR="external/patches/raspberrypi4"
 BR2_SSP_STRONG=y
 BR2_RELRO_FULL=y
-BR2_TOOLCHAIN_BUILDROOT_GLIBC=y
-BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_4_19=y
-BR2_TOOLCHAIN_BUILDROOT_CXX=y
+BR2_TOOLCHAIN_EXTERNAL=y
+BR2_ROOTFS_MERGED_USR=y
 BR2_SYSTEM_DHCP="eth0"
-BR2_ROOTFS_OVERLAY="external/board/raspberrypi4/overlay"
-BR2_ROOTFS_POST_BUILD_SCRIPT="external/board/raspberrypi4/post-build.sh"
-BR2_ROOTFS_POST_IMAGE_SCRIPT="external/board/raspberrypi4/post-image.sh"
-BR2_ROOTFS_POST_SCRIPT_ARGS="--data-part-size=64M"
+BR2_TARGET_TZ_INFO=y
+BR2_ROOTFS_OVERLAY="external/board/raspberrypi/common/overlays/root"
+BR2_ROOTFS_POST_BUILD_SCRIPT="external/board/raspberrypi/raspberrypi4/post-build.sh"
+BR2_ROOTFS_POST_IMAGE_SCRIPT="external/board/raspberrypi/raspberrypi4/post-image.sh"
+BR2_ROOTFS_POST_SCRIPT_ARGS="--data-part-size=64M --device-type=raspberrypi4 --build-version=2021.02.1 --generate-mender-image=true"
 BR2_LINUX_KERNEL=y
 BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
 BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="$(call github,raspberrypi,linux,raspberrypi-kernel_1.20210430-1)/linux-raspberrypi-kernel_1.20210430-1.tar.gz"
@@ -39,9 +38,10 @@ BR2_TARGET_UBOOT_CUSTOM_VERSION_VALUE="2021.04"
 BR2_TARGET_UBOOT_BOARD_DEFCONFIG="rpi_4_32b"
 BR2_TARGET_UBOOT_NEEDS_DTC=y
 BR2_TARGET_UBOOT_NEEDS_OPENSSL=y
-BR2_TARGET_UBOOT_BOOT_SCRIPT=y
-BR2_TARGET_UBOOT_BOOT_SCRIPT_SOURCE="$(TOPDIR)/external/board/raspberrypi4/boot.txt"
 BR2_PACKAGE_HOST_DOSFSTOOLS=y
 BR2_PACKAGE_HOST_GENIMAGE=y
 BR2_PACKAGE_HOST_MENDER_ARTIFACT=y
 BR2_PACKAGE_HOST_MTOOLS=y
+BR2_PACKAGE_HOST_UBOOT_TOOLS_BOOT_SCRIPT=y
+BR2_PACKAGE_HOST_UBOOT_TOOLS_BOOT_SCRIPT_SOURCE="$(TOPDIR)/external/board/raspberrypi/common/boot/uboot/boot.txt"
+BR2_PACKAGE_MENDER_CONNECT=y

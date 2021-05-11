@@ -1,0 +1,12 @@
+BR2_PACKAGE_MENDER_GRUBENV=y
+BR2_PACKAGE_MENDER_GRUBENV_DEFINES="external/board/raspberrypi/common/boot/grub/mender_grubenv_defines"
+BR2_TARGET_GRUB2=y
+BR2_TARGET_GRUB2_ARM_EFI=y
+BR2_TARGET_GRUB2_BUILTIN_MODULES="boot linux ext2 fat serial part_msdos part_gpt normal efi_gop iso9660 configfile search loadenv test cat echo gcry_sha256 halt hashsum sleep reboot regexp loadenv test"
+BR2_TARGET_GRUB2_INSTALL_TOOLS=y
+BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="external/board/raspberrypi/common/boot/grub/linux_efi_fragment"
+BR2_TARGET_UBOOT_CONFIG_FRAGMENT_FILES="external/board/raspberrypi/common/boot/grub/grub_on_uboot_fragment"
+# BR2_PACKAGE_UBOOT_TOOLS is not set
+BR2_PACKAGE_HOST_UBOOT_TOOLS=y
+BR2_PACKAGE_HOST_UBOOT_TOOLS_BOOT_SCRIPT=y
+BR2_PACKAGE_HOST_UBOOT_TOOLS_BOOT_SCRIPT_SOURCE="$(TOPDIR)/external/board/raspberrypi/common/boot/grub/boot.txt"

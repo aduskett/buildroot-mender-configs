@@ -7,7 +7,7 @@ start() {
     mkdir -p /var/run/mender;
   fi
   start-stop-daemon -S -q -b -m -p /var/run/mender.pid \
-  --exec /usr/bin/mender -- -daemon --log-file=@MENDER_LOG_PATH@
+  --exec /usr/bin/mender -- -daemon --log-file=/var/log/mender.log
   [ $? = 0 ] && echo "OK" || echo "FAIL"
 }
 

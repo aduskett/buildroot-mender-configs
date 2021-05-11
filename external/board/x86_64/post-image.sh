@@ -3,7 +3,6 @@ set -e
 CWD=$(pwd)
 BOARD_DIR="$(realpath "$(dirname "$0")")"
 GENIMAGE_CFG="${BOARD_DIR}/genimage-efi.cfg"
-GENIMAGE_TMP="${BUILD_DIR}/genimage.tmp"
 IMAGES_DIR="${CWD}/external/images/${DEVICE_TYPE}"
 DATA_PART_SIZE="32M"
 DEVICE_TYPE="buildroot-x86_64"
@@ -72,7 +71,6 @@ function generate_mender_image(){
 
 
 function generate_image(){
-  rm -rf "${GENIMAGE_TMP}"
   mkdir -p "${IMAGES_DIR}"
   UUID_ROOT=$(dumpe2fs "${BINARIES_DIR}/rootfs.ext2" 2>/dev/null | sed -n 's/^Filesystem UUID: *\(.*\)/\1/p')
   UUID_DATA=$(dumpe2fs "${BINARIES_DIR}/data-part.ext4" 2>/dev/null | sed -n 's/^Filesystem UUID: *\(.*\)/\1/p')

@@ -1,19 +1,25 @@
 From 878ecf861aa6e82b95d0ba849e381d8b2dfe94b7 Mon Sep 17 00:00:00 2001
 From: Adam Duskett <Aduskett@gmail.com>
-Date: Tue, 17 Dec 2019 12:59:47 -0800
+Date: Mon, 10 May 2021 10:50:23 -0700
 Subject: [PATCH] Add mender support
 
 These modifications are taken from the official meta-mender-community
 raspberrypi branch.
 
+Updated for 2021.04
+
 Signed-off-by: Adam Duskett <Aduskett@gmail.com>
 ---
  board/raspberrypi/rpi/rpi.c     |   3 -
- configs/rpi_0_w_defconfig       |   3 +-
- configs/rpi_2_defconfig         |   3 +-
- configs/rpi_3_32b_defconfig     |   3 +-
- configs/rpi_3_defconfig         |   3 +-
- configs/rpi_defconfig           |   3 +-
+ configs/rpi_0_w_defconfig       |   1 -
+ configs/rpi_2_defconfig         |   1 -
+ configs/rpi_3_32b_defconfig     |   1 -
+ configs/rpi_3_b_plus_defconfig  |   1 -
+ configs/rpi_3_defconfig         |   1 -
+ configs/rpi_4_32b_defconfig     |   1 -
+ configs/rpi_4_defconfig         |   1 -
+ configs/rpi_arm64_defconfig     |   1 -
+ configs/rpi_defconfig           |   1 -
  env/Kconfig                     |   1 -
  include/config_mender.h         |  94 +++++++++++++++++++
  include/config_mender_defines.h |  34 +++++++
@@ -22,16 +28,16 @@ Signed-off-by: Adam Duskett <Aduskett@gmail.com>
  include/env_mender.h            | 157 ++++++++++++++++++++++++++++++++
  scripts/Makefile.autoconf       |   3 +-
  tools/env/fw_env.c              |   1 +
- 14 files changed, 299 insertions(+), 15 deletions(-)
+ 18 files changed, 294 insertions(+), 14 deletions(-)
  create mode 100644 include/config_mender.h
  create mode 100644 include/config_mender_defines.h
  create mode 100644 include/env_mender.h
 
 diff --git a/board/raspberrypi/rpi/rpi.c b/board/raspberrypi/rpi/rpi.c
-index 153a1fd..8f964d6 100644
+index df52a468..61101347 100644
 --- a/board/raspberrypi/rpi/rpi.c
 +++ b/board/raspberrypi/rpi/rpi.c
-@@ -298,9 +298,6 @@ static void set_fdtfile(void)
+@@ -318,9 +318,6 @@ static void set_fdtfile(void)
   */
  static void set_fdt_addr(void)
  {
@@ -42,100 +48,118 @@ index 153a1fd..8f964d6 100644
  		return;
  
 diff --git a/configs/rpi_0_w_defconfig b/configs/rpi_0_w_defconfig
-index 39da54c..9a0fc1f 100644
+index 01565991..a1e837b5 100644
 --- a/configs/rpi_0_w_defconfig
 +++ b/configs/rpi_0_w_defconfig
-@@ -16,8 +16,6 @@ CONFIG_CMD_USB=y
+@@ -18,7 +18,6 @@ CONFIG_CMD_MMC=y
+ CONFIG_CMD_USB=y
  CONFIG_CMD_FS_UUID=y
  CONFIG_OF_EMBED=y
- CONFIG_DEFAULT_DEVICE_TREE="bcm2835-rpi-zero-w"
--CONFIG_ENV_FAT_INTERFACE="mmc"
 -CONFIG_ENV_FAT_DEVICE_AND_PART="0:1"
+ CONFIG_SYS_RELOC_GD_ENV_ADDR=y
  CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
- CONFIG_DM_KEYBOARD=y
  CONFIG_DM_MMC=y
-@@ -38,3 +36,4 @@ CONFIG_SYS_WHITE_ON_BLACK=y
- CONFIG_CONSOLE_SCROLL_LINES=10
- CONFIG_PHYS_TO_BUS=y
- CONFIG_OF_LIBFDT_OVERLAY=y
-+CONFIG_ENV_IS_IN_MMC=y
 diff --git a/configs/rpi_2_defconfig b/configs/rpi_2_defconfig
-index 5f5b405..113be84 100644
+index 1ad06267..8c559704 100644
 --- a/configs/rpi_2_defconfig
 +++ b/configs/rpi_2_defconfig
-@@ -16,8 +16,6 @@ CONFIG_CMD_USB=y
+@@ -18,7 +18,6 @@ CONFIG_CMD_MMC=y
+ CONFIG_CMD_USB=y
  CONFIG_CMD_FS_UUID=y
  CONFIG_OF_EMBED=y
- CONFIG_DEFAULT_DEVICE_TREE="bcm2836-rpi-2-b"
--CONFIG_ENV_FAT_INTERFACE="mmc"
 -CONFIG_ENV_FAT_DEVICE_AND_PART="0:1"
+ CONFIG_SYS_RELOC_GD_ENV_ADDR=y
  CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
- CONFIG_DM_KEYBOARD=y
  CONFIG_DM_MMC=y
-@@ -38,3 +36,4 @@ CONFIG_SYS_WHITE_ON_BLACK=y
- CONFIG_CONSOLE_SCROLL_LINES=10
- CONFIG_PHYS_TO_BUS=y
- CONFIG_OF_LIBFDT_OVERLAY=y
-+CONFIG_ENV_IS_IN_MMC=y
 diff --git a/configs/rpi_3_32b_defconfig b/configs/rpi_3_32b_defconfig
-index bbf902b..44a0721 100644
+index a14d7eef..5aaf19d3 100644
 --- a/configs/rpi_3_32b_defconfig
 +++ b/configs/rpi_3_32b_defconfig
-@@ -17,8 +17,6 @@ CONFIG_CMD_USB=y
+@@ -19,7 +19,6 @@ CONFIG_CMD_MMC=y
+ CONFIG_CMD_USB=y
  CONFIG_CMD_FS_UUID=y
  CONFIG_OF_EMBED=y
- CONFIG_DEFAULT_DEVICE_TREE="bcm2837-rpi-3-b"
--CONFIG_ENV_FAT_INTERFACE="mmc"
 -CONFIG_ENV_FAT_DEVICE_AND_PART="0:1"
+ CONFIG_SYS_RELOC_GD_ENV_ADDR=y
  CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
- CONFIG_DM_KEYBOARD=y
  CONFIG_DM_MMC=y
-@@ -41,3 +39,4 @@ CONFIG_SYS_WHITE_ON_BLACK=y
- CONFIG_CONSOLE_SCROLL_LINES=10
- CONFIG_PHYS_TO_BUS=y
- CONFIG_OF_LIBFDT_OVERLAY=y
-+CONFIG_ENV_IS_IN_MMC=y
+diff --git a/configs/rpi_3_b_plus_defconfig b/configs/rpi_3_b_plus_defconfig
+index ebab0b4f..b333997b 100644
+--- a/configs/rpi_3_b_plus_defconfig
++++ b/configs/rpi_3_b_plus_defconfig
+@@ -19,7 +19,6 @@ CONFIG_CMD_MMC=y
+ CONFIG_CMD_USB=y
+ CONFIG_CMD_FS_UUID=y
+ CONFIG_OF_EMBED=y
+-CONFIG_ENV_FAT_DEVICE_AND_PART="0:1"
+ CONFIG_SYS_RELOC_GD_ENV_ADDR=y
+ CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
+ CONFIG_DM_MMC=y
 diff --git a/configs/rpi_3_defconfig b/configs/rpi_3_defconfig
-index ea40351..46c26b2 100644
+index 4aedfb17..8b3c51a5 100644
 --- a/configs/rpi_3_defconfig
 +++ b/configs/rpi_3_defconfig
-@@ -17,8 +17,6 @@ CONFIG_CMD_USB=y
+@@ -19,7 +19,6 @@ CONFIG_CMD_MMC=y
+ CONFIG_CMD_USB=y
  CONFIG_CMD_FS_UUID=y
  CONFIG_OF_EMBED=y
- CONFIG_DEFAULT_DEVICE_TREE="bcm2837-rpi-3-b"
--CONFIG_ENV_FAT_INTERFACE="mmc"
+-CONFIG_ENV_FAT_DEVICE_AND_PART="0:1"
+ CONFIG_SYS_RELOC_GD_ENV_ADDR=y
+ CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
+ CONFIG_DM_MMC=y
+diff --git a/configs/rpi_4_32b_defconfig b/configs/rpi_4_32b_defconfig
+index 0cbdd5fe..2b54410a 100644
+--- a/configs/rpi_4_32b_defconfig
++++ b/configs/rpi_4_32b_defconfig
+@@ -19,7 +19,6 @@ CONFIG_CMD_PCI=y
+ CONFIG_CMD_USB=y
+ CONFIG_CMD_FS_UUID=y
+ CONFIG_OF_BOARD=y
+-CONFIG_ENV_FAT_DEVICE_AND_PART="0:1"
+ CONFIG_SYS_RELOC_GD_ENV_ADDR=y
+ CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
+ CONFIG_DM_DMA=y
+diff --git a/configs/rpi_4_defconfig b/configs/rpi_4_defconfig
+index 3f21f99e..4bccee13 100644
+--- a/configs/rpi_4_defconfig
++++ b/configs/rpi_4_defconfig
+@@ -19,7 +19,6 @@ CONFIG_CMD_PCI=y
+ CONFIG_CMD_USB=y
+ CONFIG_CMD_FS_UUID=y
+ CONFIG_OF_BOARD=y
+-CONFIG_ENV_FAT_DEVICE_AND_PART="0:1"
+ CONFIG_SYS_RELOC_GD_ENV_ADDR=y
+ CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
+ CONFIG_DM_DMA=y
+diff --git a/configs/rpi_arm64_defconfig b/configs/rpi_arm64_defconfig
+index d282d509..2c3d2a10 100644
+--- a/configs/rpi_arm64_defconfig
++++ b/configs/rpi_arm64_defconfig
+@@ -18,7 +18,6 @@ CONFIG_CMD_PCI=y
+ CONFIG_CMD_USB=y
+ CONFIG_CMD_FS_UUID=y
+ CONFIG_OF_BOARD=y
 -CONFIG_ENV_FAT_DEVICE_AND_PART="0:1"
  CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
- CONFIG_DM_KEYBOARD=y
+ CONFIG_DM_DMA=y
  CONFIG_DM_MMC=y
-@@ -41,3 +39,4 @@ CONFIG_SYS_WHITE_ON_BLACK=y
- CONFIG_CONSOLE_SCROLL_LINES=10
- CONFIG_PHYS_TO_BUS=y
- CONFIG_OF_LIBFDT_OVERLAY=y
-+CONFIG_ENV_IS_IN_MMC=y
 diff --git a/configs/rpi_defconfig b/configs/rpi_defconfig
-index 981d173..b6c4528 100644
+index 78638105..c2126fee 100644
 --- a/configs/rpi_defconfig
 +++ b/configs/rpi_defconfig
-@@ -16,8 +16,6 @@ CONFIG_CMD_USB=y
+@@ -18,7 +18,6 @@ CONFIG_CMD_MMC=y
+ CONFIG_CMD_USB=y
  CONFIG_CMD_FS_UUID=y
  CONFIG_OF_EMBED=y
- CONFIG_DEFAULT_DEVICE_TREE="bcm2835-rpi-b"
--CONFIG_ENV_FAT_INTERFACE="mmc"
 -CONFIG_ENV_FAT_DEVICE_AND_PART="0:1"
+ CONFIG_SYS_RELOC_GD_ENV_ADDR=y
  CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
- CONFIG_DM_KEYBOARD=y
  CONFIG_DM_MMC=y
-@@ -38,3 +36,4 @@ CONFIG_SYS_WHITE_ON_BLACK=y
- CONFIG_CONSOLE_SCROLL_LINES=10
- CONFIG_PHYS_TO_BUS=y
- CONFIG_OF_LIBFDT_OVERLAY=y
-+CONFIG_ENV_IS_IN_MMC=y
 diff --git a/env/Kconfig b/env/Kconfig
-index 9011109..7121f20 100644
+index b473d7cf..3fdd2457 100644
 --- a/env/Kconfig
 +++ b/env/Kconfig
-@@ -55,7 +55,6 @@ config ENV_IS_IN_EEPROM
+@@ -61,7 +61,6 @@ config ENV_IS_IN_EEPROM
  config ENV_IS_IN_FAT
  	bool "Environment is in a FAT filesystem"
  	depends on !CHAIN_OF_TRUST
@@ -145,7 +169,7 @@ index 9011109..7121f20 100644
  	select FS_FAT
 diff --git a/include/config_mender.h b/include/config_mender.h
 new file mode 100644
-index 0000000..69a5268
+index 00000000..69a52680
 --- /dev/null
 +++ b/include/config_mender.h
 @@ -0,0 +1,94 @@
@@ -245,7 +269,7 @@ index 0000000..69a5268
 +#endif /* HEADER_CONFIG_MENDER_H */
 diff --git a/include/config_mender_defines.h b/include/config_mender_defines.h
 new file mode 100644
-index 0000000..0cc7667
+index 00000000..0cc76678
 --- /dev/null
 +++ b/include/config_mender_defines.h
 @@ -0,0 +1,34 @@
@@ -284,12 +308,12 @@ index 0000000..0cc7667
 +#define MENDER_UBOOT_POST_SETUP_COMMANDS ""
 +#endif /* !HEADER_CONFIG_MENDER_DEFINES_H */
 diff --git a/include/configs/rpi.h b/include/configs/rpi.h
-index 9ce4176..e9c80e2 100644
+index 834f1cd2..9265cc28 100644
 --- a/include/configs/rpi.h
 +++ b/include/configs/rpi.h
-@@ -75,6 +75,9 @@
+@@ -97,6 +97,9 @@
+ /* Environment */
  #define CONFIG_SYS_LOAD_ADDR		0x1000000
- #define CONFIG_PREBOOT			"usb start"
  
 +#define CONFIG_BOOTCOUNT_ENV
 +#define CONFIG_BOOTCOUNT_LIMIT
@@ -298,19 +322,19 @@ index 9ce4176..e9c80e2 100644
  
  /* ATAGs support for bootm/bootz */
 diff --git a/include/env_default.h b/include/env_default.h
-index 86b639d..f56a113 100644
+index ea31a8ed..a23fb07b 100644
 --- a/include/env_default.h
 +++ b/include/env_default.h
-@@ -9,6 +9,8 @@
- 
+@@ -10,6 +10,8 @@
  #include <env_callback.h>
+ #include <linux/stringify.h>
  
 +#include <env_mender.h>
 +
  #ifdef DEFAULT_ENV_INSTANCE_EMBEDDED
- env_t environment __UBOOT_ENV_SECTION__(environment) = {
+ env_t embedded_environment __UBOOT_ENV_SECTION__(environment) = {
  	ENV_CRC,	/* CRC Sum */
-@@ -21,6 +23,7 @@ static char default_environment[] = {
+@@ -24,6 +26,7 @@ uchar default_environment[] = {
  #else
  const uchar default_environment[] = {
  #endif
@@ -320,7 +344,7 @@ index 86b639d..f56a113 100644
  	ENV_CALLBACK_VAR "=" CONFIG_ENV_CALLBACK_LIST_DEFAULT "\0"
 diff --git a/include/env_mender.h b/include/env_mender.h
 new file mode 100644
-index 0000000..0605f6a
+index 00000000..0605f6a9
 --- /dev/null
 +++ b/include/env_mender.h
 @@ -0,0 +1,157 @@
@@ -482,10 +506,10 @@ index 0000000..0605f6a
 +
 +#endif /* HEADER_ENV_MENDER_H */
 diff --git a/scripts/Makefile.autoconf b/scripts/Makefile.autoconf
-index 00b8fb3..e312c80 100644
+index 0bfc1b2a..104826c1 100644
 --- a/scripts/Makefile.autoconf
 +++ b/scripts/Makefile.autoconf
-@@ -109,7 +109,8 @@ define filechk_config_h
+@@ -108,7 +108,8 @@ define filechk_config_h
  	echo \#include \<configs/$(CONFIG_SYS_CONFIG_NAME).h\>;		\
  	echo \#include \<asm/config.h\>;				\
  	echo \#include \<linux/kconfig.h\>;				\
@@ -496,10 +520,10 @@ index 00b8fb3..e312c80 100644
  
  include/config.h: scripts/Makefile.autoconf create_symlink FORCE
 diff --git a/tools/env/fw_env.c b/tools/env/fw_env.c
-index a5d7595..a9740aa 100644
+index 2a61a5d6..b0bce1b5 100644
 --- a/tools/env/fw_env.c
 +++ b/tools/env/fw_env.c
-@@ -19,6 +19,7 @@
+@@ -20,6 +20,7 @@
  #include <ctype.h>
  #include <stdio.h>
  #include <stdlib.h>
@@ -508,5 +532,5 @@ index a5d7595..a9740aa 100644
  #include <string.h>
  #include <sys/types.h>
 -- 
-2.23.0
+2.31.1
 
