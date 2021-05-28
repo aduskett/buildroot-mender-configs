@@ -1,0 +1,4 @@
+/dev/root       /              ext4      defaults,rw                      0      1
+/dev/mmcblk0p3  /data          ext4      defaults,rw,nofail,sync          0      0
+tmpfs           /dev/shm       tmpfs     defaults,rw                      0      0
+devpts          /dev/pts       devpts    defaults,gid=5,mode=620          0      0

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -e
-BOARD_DIR=$(realpath "$(dirname "$0")")
-SSH_KEY_DIR="/factory/ssh"
+SSH_KEY_DIR="/data/ssh"
 DEVICE_TYPE="beaglebone"
 BUILD_VERSION="2021.02.2"
 
@@ -35,17 +34,17 @@ function parse_args(){
 
 setup_mender(){
   cd "${TARGET_DIR}"
-  rm -rf var/lib/mender
+  echo "artifact_name=${BUILD_VERSION}" > etc/mender/artifact_info
+  echo "device_type=${DEVICE_TYPE}" > etc/mender/device_type
   # fw_printenv needs /var/lock
   mkdir -p var/lock
+  rm -rf var/lib/mender
   cd var/lib
-  ln -s ../../data/ mender
-  cd ${CWD}
-  echo "artifact_name=${BUILD_VERSION}" > "${TARGET_DIR}"/etc/mender/artifact_info
-  echo "device_type=${DEVICE_TYPE}" > "${TARGET_DIR}"/etc/mender/device_type
+  ln -sf ../../data/mender mender
 }
 
 function main(){
+  mkdir -p "${TARGET_DIR}"/data
   parse_args "${@}"
   setup_mender
 }
