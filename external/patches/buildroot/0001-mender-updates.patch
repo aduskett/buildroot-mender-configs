@@ -3,16 +3,16 @@ From: Adam Duskett <aduskett@gmail.com>
 Date: Sat, 8 May 2021 14:16:51 -0700
 Subject: [PATCH] mender updates
 
-Signed-off-by: Adam Duskett <Aduskett@gmail.com>
+Signed-off-by: Adam Duskett <aduskett@gmail.com>
 ---
- package/mender-artifact/mender-artifact.hash | 15 +++++-----
- package/mender-artifact/mender-artifact.mk   |  9 +++---
+ package/mender-artifact/mender-artifact.hash | 15 ++++----
+ package/mender-artifact/mender-artifact.mk   |  9 ++---
  package/mender-grubenv/mender-grubenv.hash   |  4 +--
  package/mender-grubenv/mender-grubenv.mk     |  4 +--
- package/mender/Config.in                     | 26 ++++++++++++++++--
- package/mender/mender.hash                   | 25 ++++++++++-------
- package/mender/mender.mk                     | 29 ++++++++++++++------
- 7 files changed, 76 insertions(+), 36 deletions(-)
+ package/mender/Config.in                     | 26 ++++++++++++--
+ package/mender/mender.hash                   | 25 +++++++------
+ package/mender/mender.mk                     | 38 +++++++++++++++-----
+ 7 files changed, 85 insertions(+), 36 deletions(-)
 
 diff --git a/package/mender-artifact/mender-artifact.hash b/package/mender-artifact/mender-artifact.hash
 index a9fba29..175865b 100644
@@ -222,7 +222,7 @@ index f1eef65..c2bbbe5 100644
 -sha256  39f8e574fa6d082b650a5d6159045cdec7c4662da6ccbd67271079904353b8d5  LIC_FILES_CHKSUM.sha256
 +sha256  4f3541ea69b9b6e3959679576c146b42ba9a840a9dc4e593bff43e5e3a313d24  LIC_FILES_CHKSUM.sha256
 diff --git a/package/mender/mender.mk b/package/mender/mender.mk
-index b79f196..b4c5761 100644
+index 0224e84..a110caf 100644
 --- a/package/mender/mender.mk
 +++ b/package/mender/mender.mk
 @@ -4,7 +4,7 @@
@@ -273,7 +273,7 @@ index b79f196..b4c5761 100644
  
  MENDER_LDFLAGS = -X github.com/mendersoftware/mender/conf.Version=$(MENDER_VERSION)
  
-@@ -76,12 +81,20 @@ endef
+@@ -76,6 +81,23 @@ endef
  
  MENDER_POST_INSTALL_TARGET_HOOKS += MENDER_INSTALL_CONFIG_FILES
  
@@ -283,17 +283,20 @@ index b79f196..b4c5761 100644
 +MENDER_TAGS += nolzma
 +endif
 +
- ifeq ($(BR2_PACKAGE_DBUS),y)
- define MENDER_INSTALL_DBUS_AUTHENTICATION_MANAGER_CONF
- 	$(INSTALL) -D -m 0755 $(@D)/support/dbus/io.mender.AuthenticationManager.conf \
- 		      $(TARGET_DIR)/etc/dbus-1/system.d/io.mender.AuthenticationManager.conf
- endef
- MENDER_POST_INSTALL_TARGET_HOOKS += MENDER_INSTALL_DBUS_AUTHENTICATION_MANAGER_CONF
++ifeq ($(BR2_PACKAGE_DBUS)$(BR2_PACKAGE_LIBGLIB2),yy)
++MENDER_DEPENDENCIES += libglib2
++define MENDER_INSTALL_DBUS_AUTHENTICATION_MANAGER_CONF
++	$(INSTALL) -D -m 0755 $(@D)/support/dbus/io.mender.AuthenticationManager.conf \
++		      $(TARGET_DIR)/etc/dbus-1/system.d/io.mender.AuthenticationManager.conf
++endef
++MENDER_POST_INSTALL_TARGET_HOOKS += MENDER_INSTALL_DBUS_AUTHENTICATION_MANAGER_CONF
 +else
 +MENDER_TAGS += nodbus
- endif
- 
++endif
++
  define MENDER_INSTALL_INIT_SYSTEMD
+ 	$(INSTALL) -D -m 0644 $(MENDER_PKGDIR)/mender-client.service \
+ 		$(TARGET_DIR)/usr/lib/systemd/system/mender-client.service
 -- 
 2.31.1
 

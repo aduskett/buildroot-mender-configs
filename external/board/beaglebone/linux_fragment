@@ -1,0 +1,2 @@
+# Disable the old serial driver. The new OMAP driver is preffered.
+# CONFIG_SERIAL_8250 is not set

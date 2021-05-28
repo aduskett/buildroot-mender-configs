@@ -1,0 +1,27 @@
+{
+  "environment": [{
+    "buildroot_dir_name": "buildroot",
+    "exit_after_build": false,
+    "update_buildroot": false,
+    "user": "br-user"
+  }],
+  "configs": [{
+    "build": false,
+    "clean": false,
+    "remove": false,
+    "verbose": false,
+    "skip": false,
+    "defconfig": "beaglebone_mender_defconfig",
+    "external_trees": [{
+      "name": "external",
+      "fragment_dir": "configs/fragments",
+      "fragments": [
+        "beaglebone-mender-uboot.fragment"
+      ]
+    }],
+    "output_tree": "external",
+    "config_dir_tree": "external",
+    "config_dir_name": "configs",
+    "output_dir_name": "output"
+  }]
+}

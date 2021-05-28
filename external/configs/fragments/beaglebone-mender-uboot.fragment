@@ -1,0 +1,5 @@
+BR2_TARGET_UBOOT_PATCH="external/board/beaglebone/common/patches/uboot"
+BR2_TARGET_UBOOT_CONFIG_FRAGMENT_FILES="external/board/beaglebone/uboot_mender_fragment"
+BR2_PACKAGE_HOST_UBOOT_TOOLS=y
+BR2_PACKAGE_HOST_UBOOT_TOOLS_BOOT_SCRIPT=y
+BR2_PACKAGE_HOST_UBOOT_TOOLS_BOOT_SCRIPT_SOURCE="$(TOPDIR)/external/board/beaglebone/common/boot/uboot/boot.txt"

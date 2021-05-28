@@ -1,0 +1,53 @@
+From 8625ae4933e610c86fec68b957a00fe73798e1e3 Mon Sep 17 00:00:00 2001
+From: Adam Duskett <aduskett@gmail.com>
+Date: Thu, 20 May 2021 14:47:28 -0700
+Subject: [PATCH] mender settings
+
+Modify these settings to match your device.
+
+Signed-off-by: Adam Duskett <aduskett@gmail.com>
+---
+ include/config_mender_defines.h | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+ create mode 100644 include/config_mender_defines.h
+
+diff --git a/include/config_mender_defines.h b/include/config_mender_defines.h
+new file mode 100644
+index 00000000..0cf3632c
+--- /dev/null
++++ b/include/config_mender_defines.h
+@@ -0,0 +1,31 @@
++#ifndef HEADER_CONFIG_MENDER_DEFINES_H
++#define HEADER_CONFIG_MENDER_DEFINES_H
++
++/* Shell variables */
++#define MENDER_LINUX_LOAD_ADDR "0x82000000"
++#define MENDER_FDT_LOAD_ADDR "0x88000000"
++#define MENDER_BOOT_PART_NUMBER 1
++#define MENDER_BOOT_PART_NUMBER_HEX 1
++#define MENDER_ROOTFS_PART_A_NUMBER 1
++#define MENDER_ROOTFS_PART_A_NUMBER_HEX 1
++#define MENDER_ROOTFS_PART_B_NUMBER 2
++#define MENDER_ROOTFS_PART_B_NUMBER_HEX 2
++#define MENDER_UBOOT_STORAGE_INTERFACE "mmc"
++#define MENDER_UBOOT_STORAGE_DEVICE 0
++
++/* BB variables. */
++#define MENDER_STORAGE_DEVICE_BASE "/dev/mmcblk0p"
++#define MENDER_UBOOT_ENV_STORAGE_DEVICE_OFFSET_1 0x260000
++#define MENDER_UBOOT_ENV_STORAGE_DEVICE_OFFSET_2 0x280000
++#define MENDER_ROOTFS_PART_A_NAME "/dev/mmcblk0p1"
++#define MENDER_ROOTFS_PART_B_NAME "/dev/mmcblk0p2"
++
++/* For sanity checks. */
++#define MENDER_BOOTENV_SIZE 0x20000
++
++#define MENDER_BOOT_KERNEL_TYPE "bootz"
++#define MENDER_KERNEL_NAME "zImage"
++#define MENDER_DTB_NAME "am335x-boneblack.dtb"
++#define MENDER_UBOOT_PRE_SETUP_COMMANDS ""
++#define MENDER_UBOOT_POST_SETUP_COMMANDS ""
++#endif
+-- 
+2.31.1
+

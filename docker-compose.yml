@@ -6,7 +6,7 @@ services:
       args:
          BUILDROOT_USER: br-user
          BUILDROOT_DIR: buildroot
-         BUILDROOT_VERSION: 2021.02.1
+         BUILDROOT_VERSION: 2021.02.2
          # BUILDROOT_VERSION: git
          # BUILDROOT_BRANCH: master
          # Space deliminated list of external trees of which to use.

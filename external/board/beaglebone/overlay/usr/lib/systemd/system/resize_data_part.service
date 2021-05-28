@@ -1,0 +1,12 @@
+[Unit]
+Description=resize data partition
+Before=data.mount setup_directories.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/resize_data_part
+KillSignal=SIGQUIT
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
