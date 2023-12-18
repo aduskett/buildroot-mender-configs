@@ -5,7 +5,9 @@ Mender UEFI PC sample config
 
   $ make mender_x86_64_efi_defconfig
 
-  Add any additional packages required and build:
+  Add any additional packages required. Update the files in board/mender/x86_64
+  and change /dev/vda to what is relevant for your platform: typically
+  /dev/mmcblk0p for eMMC and /dev/sda for USB or SATA.
 
   $ make
 
@@ -34,10 +36,11 @@ Run the emulation with:
 
 qemu-system-x86_64 \
     -M pc \
-    -bios </path/to/OVMF_CODE.fd> \
     -drive file=output/images/disk.img,if=virtio,format=raw \
     -net nic,model=virtio \
-    -net user
+    -net user \
+    -serial stdio \
+    -bios </path/to/OVMF_CODE.fd>
 
 Note that </path/to/OVMF.fd> needs to point to a valid x86_64 UEFI
 firmware image for qemu. It may be provided by your distribution as an
