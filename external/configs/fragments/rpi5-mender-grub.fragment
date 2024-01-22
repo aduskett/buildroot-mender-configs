@@ -1,0 +1,7 @@
+BR2_PACKAGE_MENDER_GRUBENV=y
+BR2_PACKAGE_MENDER_GRUBENV_DEFINES="external/board/raspberrypi/raspberrypi5/mender_grubenv_defines"
+BR2_TARGET_GRUB2=y
+BR2_TARGET_GRUB2_ARM_EFI=y
+BR2_TARGET_GRUB2_BUILTIN_MODULES_EFI="boot linux ext2 fat serial part_msdos part_gpt normal efi_gop iso9660 configfile search loadenv test cat echo gcry_sha256 halt hashsum sleep reboot regexp loadenv test"
+BR2_TARGET_GRUB2_INSTALL_TOOLS=y
+BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="external/board/raspberrypi/common/boot/grub/linux_efi_fragment"

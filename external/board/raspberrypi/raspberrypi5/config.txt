@@ -1,0 +1,8 @@
+kernel=u-boot.bin
+dtoverlay=vc4-kms-v3d
+dtoverlay=vc4-kms-v3d-pi5
+
+dtoverlay=disable-bt-pi5
+dtoverlay=uart0-pi5
+dtparam=uart0_console=on
+dtparam=uart0=on

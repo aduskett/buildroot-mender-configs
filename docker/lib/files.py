@@ -1,6 +1,6 @@
 import os
 import sys
-import logging
+from lib.logger import Logger
 
 
 class Files:
@@ -14,8 +14,9 @@ class Files:
         :returns: True on success, False if file_path is not a file.
         :rtype: bool
         """
+        logger = Logger("Files")
         if os.path.isfile(file_path):
-            logging.debug("rm -rf %s", file_path)
+            logger.debug(f"rm -rf {file_path}")
             os.remove(file_path)
             return True
         return False
@@ -29,12 +30,13 @@ class Files:
         :return: True or False.
         :rtype: bool
         """
+        logger = Logger("Files")
         if not os.path.isfile(path):
             if fail:
-                logging.error("%s: no such file", path)
+                logger.error(f"{path}: no such file")
                 sys.exit(1)
             return False
-        logging.debug("File %s exists", path)
+        logger.debug(f"File {path} exists")
         return True
 
     @staticmethod
@@ -48,9 +50,10 @@ class Files:
         :return: Failure if specified file is not a file, a buffer on success.
         :rtype: str
         """
+        logger = Logger("Files")
         buff = ""
         try:
-            with open(file_location, "rt") as file_location_fd:
+            with open(file_location, "rt", encoding="utf-8") as file_location_fd:
                 for line in file_location_fd:
                     buff += line
             file_location_fd.close()
@@ -60,7 +63,7 @@ class Files:
                 return buff.strip()
             return buff
         except UnicodeDecodeError as err:
-            logging.error("%s:%s ", file_location, err)
+            logger.error(f"{file_location}:{err}")
             return None
 
     @staticmethod
@@ -78,12 +81,14 @@ class Files:
         """
         open_options = "wt" if not append else "a"
         if Files.exists(file_location) and not overwrite and not append:
-            raise FileExistsError(file_location + " already exists")
+            raise FileExistsError(f"{file_location} already exists")
         try:
-            with open(file_location, open_options) as file_location_fd:
+            with open(
+                file_location, open_options, encoding="utf-8"
+            ) as file_location_fd:
                 for line in buff.splitlines():
-                    file_location_fd.write(line + "\n")
+                    file_location_fd.write(f"{line}\n")
             file_location_fd.close()
             return True
         except IsADirectoryError as err:
-            raise IsADirectoryError(err)
+            raise IsADirectoryError from err

@@ -1,0 +1,39 @@
+From 8d2d0d04a9971df76580cc5d8ebd4c1b4a035c3c Mon Sep 17 00:00:00 2001
+From: Adam Duskett <adam.duskett@amarulasolutions.com>
+Date: Thu, 18 Jan 2024 19:18:45 -0700
+Subject: [PATCH 2/2] package/mesa3d: bump version to 23.3.3
+
+Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
+---
+ package/mesa3d/mesa3d.hash | 5 +++--
+ package/mesa3d/mesa3d.mk   | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/package/mesa3d/mesa3d.hash b/package/mesa3d/mesa3d.hash
+index 0f4ca05831..706911a809 100644
+--- a/package/mesa3d/mesa3d.hash
++++ b/package/mesa3d/mesa3d.hash
+@@ -1,4 +1,5 @@
+-# From https://gitlab.freedesktop.org/mesa/mesa/-/blob/23.2/docs/relnotes/23.2.1.rst
+-sha256  64de0616fc2d801f929ab1ac2a4f16b3e2783c4309a724c8a259b20df8bbc1cc  mesa-23.2.1.tar.xz
++# From https://lists.freedesktop.org/archives/mesa-announce/2024-January/000742.html
++sha256  518307c0057fa3cee8b58df78be431d4df5aafa7edc60d09278b2d7a0a80f3b4  mesa-23.3.3.tar.xz
++sha512  bed23e8324b026edd5d2b16a381ec563cf2fa9be9c8fbe8d9fb907cab9d87eef91f493fb9d4e3973d4b679e271d2a85ce48af491585638ab97f087532fc63c30  mesa-23.3.3.tar.xz
+ # License
+ sha256  a00275a53178e2645fb65be99a785c110513446a5071ff2c698ed260ad917d75  docs/license.rst
+diff --git a/package/mesa3d/mesa3d.mk b/package/mesa3d/mesa3d.mk
+index 4b360c8a8f..99db7d0eb2 100644
+--- a/package/mesa3d/mesa3d.mk
++++ b/package/mesa3d/mesa3d.mk
+@@ -5,7 +5,7 @@
+ ################################################################################
+ 
+ # When updating the version, please also update mesa3d-headers
+-MESA3D_VERSION = 23.2.1
++MESA3D_VERSION = 23.3.3
+ MESA3D_SOURCE = mesa-$(MESA3D_VERSION).tar.xz
+ MESA3D_SITE = https://archive.mesa3d.org
+ MESA3D_LICENSE = MIT, SGI, Khronos
+-- 
+2.43.0
+

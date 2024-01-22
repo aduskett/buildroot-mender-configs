@@ -1,0 +1,22 @@
+{
+  "environment": [{
+    "buildroot_dir_name": "buildroot",
+    "user": "br-user"
+  }],
+  "configs": [{
+    "defconfig": "raspberrypi5_mender_defconfig",
+    "build": true,
+    "clean": false,
+    "legal_info": false,
+    "remove": false,
+    "skip": false,
+    "verbose": true,
+    "external_trees": [{
+      "name": "external",
+      "fragment_dir": "configs/fragments",
+      "fragments": [
+        "rpi-mender-grub.fragment"
+      ]
+    }]
+  }]
+}

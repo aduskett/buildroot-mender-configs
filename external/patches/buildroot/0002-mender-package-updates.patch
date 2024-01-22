@@ -1,0 +1,552 @@
+From 3fdf22a93f1adff115ec7023cc9752a403f9d89f Mon Sep 17 00:00:00 2001
+From: Adam Duskett <adam.duskett@amarulasolutions.com>
+Date: Thu, 18 Jan 2024 16:28:31 -0700
+Subject: [PATCH 1/1] mender package updates:
+
+mender: 3.5.1
+mender-artifact: 3.10.2
+mender-connect: 2.1.1
+mender-grubenv: 64e32b01d1bf54784d2a290ad0469c583e843864
+Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
+---
+ board/mender/x86_64/post-build.sh             |  5 ++-
+ board/mender/x86_64/post-image-efi.sh         | 20 +++++++++++
+ package/mender-artifact/mender-artifact.hash  | 21 ++++++-----
+ package/mender-artifact/mender-artifact.mk    | 24 ++++++++++---
+ package/mender-connect/mender-connect.hash    |  6 ++--
+ package/mender-connect/mender-connect.mk      |  2 +-
+ package/mender-grubenv/mender-grubenv.hash    |  4 +--
+ package/mender-grubenv/mender-grubenv.mk      | 18 ++++------
+ package/mender/artifact_info                  |  1 -
+ package/mender/mender.conf                    |  1 +
+ package/mender/mender.hash                    | 10 +++---
+ package/mender/mender.mk                      | 36 +++++++++----------
+ support/testing/tests/package/test_mender.py  |  3 ++
+ .../tests/package/test_mender/post-build.sh   | 24 +++++++++++++
+ 14 files changed, 119 insertions(+), 56 deletions(-)
+ delete mode 100644 package/mender/artifact_info
+ create mode 100755 support/testing/tests/package/test_mender/post-build.sh
+
+diff --git a/board/mender/x86_64/post-build.sh b/board/mender/x86_64/post-build.sh
+index 23d1120d45..6ee16ad242 100755
+--- a/board/mender/x86_64/post-build.sh
++++ b/board/mender/x86_64/post-build.sh
+@@ -1,7 +1,6 @@
+ #!/usr/bin/env bash
+ set -e
+ DEVICE_TYPE="buildroot-x86_64"
+-ARTIFACT_NAME="1.0"
+ 
+ function parse_args {
+     local o O opts
+@@ -19,7 +18,8 @@ function parse_args {
+             DEVICE_TYPE="${2}"; shift 2
+             ;;
+         (-a|--artifact-name)
+-            ARTIFACT_NAME="${2}"; shift 2
++            # Ignored to have same options as other scripts
++            shift 2
+             ;;
+         (--)
+             shift; break
+@@ -48,7 +48,6 @@ function main {
+     parse_args "${@}"
+     mender_fixup
+     echo "device_type=${DEVICE_TYPE}" > "${TARGET_DIR}/etc/mender/device_type"
+-    echo "artifact_name=${ARTIFACT_NAME}" > "${TARGET_DIR}/etc/mender/artifact_info"
+ }
+ 
+ main "${@}"
+diff --git a/board/mender/x86_64/post-image-efi.sh b/board/mender/x86_64/post-image-efi.sh
+index 97b9e06d21..d184378696 100755
+--- a/board/mender/x86_64/post-image-efi.sh
++++ b/board/mender/x86_64/post-image-efi.sh
+@@ -31,9 +31,28 @@ function parse_args {
+     done
+ }
+ 
++# Generate a mender bootstrap artifact.
++# See https://northerntech.atlassian.net/browse/MEN-2585
++generate_mender_bootstrap_artifact() {
++  rm -rf "${BINARIES_DIR}"/data-part
++  mkdir -p "${BINARIES_DIR}"/data-part
++  img_checksum=$(sha256sum "${BINARIES_DIR}"/rootfs.ext4 |awk '{print $1}')
++
++  "${HOST_DIR}"/bin/mender-artifact \
++    write bootstrap-artifact \
++    --artifact-name "${ARTIFACT_NAME}" \
++    --device-type "${DEVICE_TYPE}" \
++    --provides "rootfs-image.version:${ARTIFACT_NAME}" \
++    --provides "rootfs-image.checksum:${img_checksum}" \
++    --clears-provides "rootfs-image.*" \
++    --output-path "${BINARIES_DIR}"/data-part/bootstrap.mender \
++    --version 3
++}
++
+ # Create the data partition
+ function make_data_partition {
+     "${HOST_DIR}/sbin/mkfs.ext4" \
++        -d "${BINARIES_DIR}"/data-part \
+         -F \
+         -r 1 \
+         -N 0 \
+@@ -63,6 +82,7 @@ function generate_image {
+ # Main function.
+ function main {
+     parse_args "${@}"
++    generate_mender_bootstrap_artifact
+     make_data_partition
+     generate_image
+     generate_mender_image
+diff --git a/package/mender-artifact/mender-artifact.hash b/package/mender-artifact/mender-artifact.hash
+index 8262e26bf0..3bba211f68 100644
+--- a/package/mender-artifact/mender-artifact.hash
++++ b/package/mender-artifact/mender-artifact.hash
+@@ -1,6 +1,6 @@
+ # Locally computed:
+-sha256  d3ed68d8637195ff35de97b12c8fa148cebffb1ee0fd0d43909ec1643c0c296a  mender-artifact-3.8.0.tar.gz
+-sha256  b8462a14975e30fb0dff14ed50e7563e833ccce13c2aa93f95386ffe877ed673  LIC_FILES_CHKSUM.sha256
++sha256  c8709cbe2c01ee23c68c76250a4c6e2a0cfe2cf10e42c264c359569f97c1af76  mender-artifact-3.10.2.tar.gz
++sha256  a413cbd2475f73b94500a618f2606a51abed453ae9e1054d2980274136d0e620  LIC_FILES_CHKSUM.sha256
+ 
+ # License hash extracted from LIC_FILES_CHKSUM.sha256 using the
+ # following command:
+@@ -8,13 +8,12 @@ sha256  b8462a14975e30fb0dff14ed50e7563e833ccce13c2aa93f95386ffe877ed673  LIC_FI
+ #     sed '/^[A-Za-z0-9_]/s/^/sha256  /' LIC_FILES_CHKSUM.sha256
+ 
+ # Apache 2.0 licenses.
+-sha256  1033348db7606a7e61b6484f293847cf8d7a35766efebb97e304d4bd5d7f3f6b  LICENSE
++sha256  52b2497ce07650b825015e80ca7a5d40c360c04c530234ca6d950b0f98bca23a  LICENSE
+ sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  vendor/github.com/minio/sha256-simd/LICENSE
+ sha256  8f5d89b47d7a05a199b77b7e0f362dad391d451ebda4ef48ba11c50c071564c7  vendor/github.com/mendersoftware/progressbar/LICENSE
+ sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  vendor/google.golang.org/genproto/LICENSE
+ sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  vendor/google.golang.org/grpc/LICENSE
+ sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  vendor/google.golang.org/appengine/LICENSE
+-sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  vendor/cloud.google.com/go/LICENSE
+ sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  vendor/cloud.google.com/go/kms/LICENSE
+ sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  vendor/cloud.google.com/go/iam/LICENSE
+ sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  vendor/cloud.google.com/go/compute/LICENSE
+@@ -22,6 +21,8 @@ sha256  58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd  vendor
+ sha256  73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68  vendor/github.com/golang/groupcache/LICENSE
+ sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  vendor/gopkg.in/square/go-jose.v2/LICENSE
+ sha256  c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4  vendor/github.com/oklog/run/LICENSE
++sha256  73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68  vendor/github.com/mendersoftware/openssl/LICENSE
++sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  vendor/github.com/googleapis/enterprise-certificate-proxy/LICENSE
+ 
+ #
+ # BSD 2 Clause licenses.
+@@ -44,20 +45,22 @@ sha256  fc0a2f71df4e8f047902da53d1f85301be43e0f360fc167057a2d04658ed2ba9  vendor
+ sha256  4835612df0098ca95f8e7d9e3bffcb02358d435dbb38057c844c99d7f725eb20  vendor/google.golang.org/protobuf/LICENSE
+ sha256  8778a9fc1eaffb03ab873caae251df2d224f6b5502be8777d3cd573a4dd43903  vendor/github.com/golang/protobuf/LICENSE
+ sha256  b95218cd9607855a6536384c0262922b30a0c2bf56e4ced790240f3a3bac4722  vendor/github.com/googleapis/gax-go/v2/LICENSE
++sha256  2d36597f7117c38b006835ae7f537487207d8ec407aa9d9980794b2030cbc067  vendor/golang.org/x/crypto/LICENSE
++sha256  2d36597f7117c38b006835ae7f537487207d8ec407aa9d9980794b2030cbc067  vendor/golang.org/x/time/LICENSE
+ sha256  f69f157b0be75da373605dbc8bbf142e8924ee82d8f44f11bcaf351335bf98cf  vendor/github.com/golang/snappy/LICENSE
+ sha256  dd26a7abddd02e2d0aba97805b31f248ef7835d9e10da289b22e3b8ab78b324d  vendor/gopkg.in/square/go-jose.v2/json/LICENSE
+ sha256  6a358d2540ca14048f02d366f23787c0a480157e58f058113f0e27168dd4e447  vendor/github.com/pierrec/lz4/LICENSE
++sha256  f69f157b0be75da373605dbc8bbf142e8924ee82d8f44f11bcaf351335bf98cf  vendor/github.com/klauspost/compress/internal/snapref/LICENSE
+ #
+ # ISC licenses.
+ sha256  1b93a317849ee09d3d7e4f1d20c2b78ddb230b4becb12d7c224c927b9d470251  vendor/github.com/davecgh/go-spew/LICENSE
+ #
+ # MIT licenses.
+ sha256  f8e536c1c7b695810427095dc85f5f80d44ff7c10535e8a9486cf393e2599189  vendor/github.com/stretchr/testify/LICENSE
+-sha256  da277af11b85227490377fbcac6afccc68be560c4fff36ac05ca62de55345fd7  vendor/github.com/urfave/cli/LICENSE
++sha256  2be6c75f36f3022ea015fea7b1b7135ce67d477ee721d0fc6c98678badb13b8b  vendor/github.com/urfave/cli/LICENSE
+ sha256  51a0c9ec7f8b7634181b8d4c03e5b5d204ac21d6e72f46c313973424664b2e6b  vendor/github.com/sirupsen/logrus/LICENSE
+ sha256  6d2de1cde19c4d2bd8bcd9aaa1d581f4cfa3db9cf71896140330eaa2f2687685  vendor/github.com/klauspost/pgzip/LICENSE
+ sha256  a55959c4e3e8917bfa857359bb641115336276a6cc97408fd8197e079fb18470  vendor/github.com/cpuguy83/go-md2man/v2/LICENSE.md
+-sha256  c8024e31c1de453fea90f22a221968835cc7af9d520274a2576c9ec9976055b0  vendor/github.com/shurcooL/sanitized_anchor_name/LICENSE
+ sha256  d18f6323b71b0b768bb5e9616e36da390fbd39369a81807cca352de4e4e6aa0b  vendor/gopkg.in/yaml.v3/LICENSE
+ sha256  08eab1118c80885fa1fa6a6dd7303f65a379fcb3733e063d20d1bbc2c76e6fa1  vendor/github.com/mattn/go-isatty/LICENSE
+ sha256  5d966570d7a442d4e969892860a914e542c97f262c873baee8f0aa48e1f40212  vendor/github.com/klauspost/cpuid/v2/LICENSE
+@@ -74,6 +77,7 @@ sha256  831892cd31b9eef0311bb1de9014527ef5d3592eed7add1f9f829510d2065e62  vendor
+ sha256  d0bb61dd59b6d59021893751bdd1205ee88c8206dcabd6b4c68d35b94ee19750  vendor/github.com/armon/go-metrics/LICENSE
+ sha256  5c0476add4c38b55d0ed5ac11b85e00c38f26e1caee20dfe3ab58190103d1fbc  vendor/github.com/cenkalti/backoff/v3/LICENSE
+ sha256  b8ce983c0e0b1410115d42b65d5471b3666a8d4f4334a52f29f457a39a71b463  vendor/github.com/hashicorp/go-hclog/LICENSE
++sha256  f566a9f97bacdaf00d9f21dd991e81dc11201c4e016c86b470799429a1c9a79c  vendor/github.com/klauspost/compress/zstd/internal/xxhash/LICENSE.txt
+ #
+ # MPL-2.0 licenses.
+ sha256  60222c28c1a7f6a92c7df98e5c5f4459e624e6e285e0b9b94467af5f6ab3343d  vendor/github.com/hashicorp/go-secure-stdlib/strutil/LICENSE
+@@ -87,9 +91,10 @@ sha256  60222c28c1a7f6a92c7df98e5c5f4459e624e6e285e0b9b94467af5f6ab3343d  vendor
+ sha256  60222c28c1a7f6a92c7df98e5c5f4459e624e6e285e0b9b94467af5f6ab3343d  vendor/github.com/hashicorp/go-uuid/LICENSE
+ sha256  a830016911a348a54e89bd54f2f8b0d8fffdeac20aecfba8e36ebbf38a03f5ff  vendor/github.com/hashicorp/go-plugin/LICENSE
+ sha256  1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5  vendor/github.com/hashicorp/go-sockaddr/LICENSE
+-sha256  60222c28c1a7f6a92c7df98e5c5f4459e624e6e285e0b9b94467af5f6ab3343d  vendor/github.com/hashicorp/vault/sdk/LICENSE
+-sha256  60222c28c1a7f6a92c7df98e5c5f4459e624e6e285e0b9b94467af5f6ab3343d  vendor/github.com/hashicorp/vault/api/LICENSE
++sha256  d6b1a865f1c8c697d343bd4e0ce61025f91898486a1f00d727f32e8644af77d3  vendor/github.com/hashicorp/vault/sdk/LICENSE
++sha256  d6b1a865f1c8c697d343bd4e0ce61025f91898486a1f00d727f32e8644af77d3  vendor/github.com/hashicorp/vault/api/LICENSE
+ sha256  812e9d96e900a093ae4d1d3f22c5f82f568a0a0461c3007a99d00573d41c5461  vendor/github.com/hashicorp/yamux/LICENSE
+ sha256  60222c28c1a7f6a92c7df98e5c5f4459e624e6e285e0b9b94467af5f6ab3343d  vendor/github.com/hashicorp/go-immutable-radix/LICENSE
+ sha256  a830016911a348a54e89bd54f2f8b0d8fffdeac20aecfba8e36ebbf38a03f5ff  vendor/github.com/hashicorp/go-multierror/LICENSE
+ sha256  af175b9d96ee93c21a036152e1b905b0b95304d4ae8c2c921c7609100ba8df7e  vendor/github.com/hashicorp/golang-lru/LICENSE
++sha256  60222c28c1a7f6a92c7df98e5c5f4459e624e6e285e0b9b94467af5f6ab3343d  vendor/github.com/hashicorp/go-secure-stdlib/mlock/LICENSE
+diff --git a/package/mender-artifact/mender-artifact.mk b/package/mender-artifact/mender-artifact.mk
+index 6ade624a23..0d26a6f174 100644
+--- a/package/mender-artifact/mender-artifact.mk
++++ b/package/mender-artifact/mender-artifact.mk
+@@ -4,7 +4,7 @@
+ #
+ ################################################################################
+ 
+-HOST_MENDER_ARTIFACT_VERSION = 3.8.0
++HOST_MENDER_ARTIFACT_VERSION = 3.10.2
+ HOST_MENDER_ARTIFACT_SITE = $(call github,mendersoftware,mender-artifact,$(HOST_MENDER_ARTIFACT_VERSION))
+ HOST_MENDER_ARTIFACT_LICENSE = Apache2.0, BSD-2-Clause, BSD-3-Clause, ISC, MIT, MPL-2.0
+ HOST_MENDER_ARTIFACT_LICENSE_FILES = \
+@@ -15,7 +15,6 @@ HOST_MENDER_ARTIFACT_LICENSE_FILES = \
+ 	vendor/google.golang.org/genproto/LICENSE \
+ 	vendor/google.golang.org/grpc/LICENSE \
+ 	vendor/google.golang.org/appengine/LICENSE \
+-	vendor/cloud.google.com/go/LICENSE \
+ 	vendor/cloud.google.com/go/kms/LICENSE \
+ 	vendor/cloud.google.com/go/iam/LICENSE \
+ 	vendor/cloud.google.com/go/compute/LICENSE \
+@@ -23,6 +22,8 @@ HOST_MENDER_ARTIFACT_LICENSE_FILES = \
+ 	vendor/github.com/golang/groupcache/LICENSE \
+ 	vendor/gopkg.in/square/go-jose.v2/LICENSE \
+ 	vendor/github.com/oklog/run/LICENSE \
++	vendor/github.com/mendersoftware/openssl/LICENSE \
++	vendor/github.com/googleapis/enterprise-certificate-proxy/LICENSE \
+ 	vendor/github.com/pkg/errors/LICENSE \
+ 	vendor/github.com/pmezard/go-difflib/LICENSE \
+ 	vendor/golang.org/x/sys/LICENSE \
+@@ -40,16 +41,18 @@ HOST_MENDER_ARTIFACT_LICENSE_FILES = \
+ 	vendor/google.golang.org/protobuf/LICENSE \
+ 	vendor/github.com/golang/protobuf/LICENSE \
+ 	vendor/github.com/googleapis/gax-go/v2/LICENSE \
++	vendor/golang.org/x/crypto/LICENSE \
++	vendor/golang.org/x/time/LICENSE \
+ 	vendor/github.com/golang/snappy/LICENSE \
+ 	vendor/gopkg.in/square/go-jose.v2/json/LICENSE \
+ 	vendor/github.com/pierrec/lz4/LICENSE \
++	vendor/github.com/klauspost/compress/internal/snapref/LICENSE \
+ 	vendor/github.com/davecgh/go-spew/LICENSE \
+ 	vendor/github.com/stretchr/testify/LICENSE \
+ 	vendor/github.com/urfave/cli/LICENSE \
+ 	vendor/github.com/sirupsen/logrus/LICENSE \
+ 	vendor/github.com/klauspost/pgzip/LICENSE \
+ 	vendor/github.com/cpuguy83/go-md2man/v2/LICENSE.md \
+-	vendor/github.com/shurcooL/sanitized_anchor_name/LICENSE \
+ 	vendor/gopkg.in/yaml.v3/LICENSE \
+ 	vendor/github.com/mattn/go-isatty/LICENSE \
+ 	vendor/github.com/klauspost/cpuid/v2/LICENSE \
+@@ -66,6 +69,7 @@ HOST_MENDER_ARTIFACT_LICENSE_FILES = \
+ 	vendor/github.com/armon/go-metrics/LICENSE \
+ 	vendor/github.com/cenkalti/backoff/v3/LICENSE \
+ 	vendor/github.com/hashicorp/go-hclog/LICENSE \
++	vendor/github.com/klauspost/compress/zstd/internal/xxhash/LICENSE.txt \
+ 	vendor/github.com/hashicorp/go-secure-stdlib/strutil/LICENSE \
+ 	vendor/github.com/hashicorp/go-secure-stdlib/parseutil/LICENSE \
+ 	vendor/github.com/hashicorp/errwrap/LICENSE \
+@@ -82,9 +86,19 @@ HOST_MENDER_ARTIFACT_LICENSE_FILES = \
+ 	vendor/github.com/hashicorp/yamux/LICENSE \
+ 	vendor/github.com/hashicorp/go-immutable-radix/LICENSE \
+ 	vendor/github.com/hashicorp/go-multierror/LICENSE \
+-	vendor/github.com/hashicorp/golang-lru/LICENSE
++	vendor/github.com/hashicorp/golang-lru/LICENSE \
++	vendor/github.com/hashicorp/go-secure-stdlib/mlock/LICENSE
++
++HOST_MENDER_ARTIFACT_DEPENDENCIES = host-pkgconf host-openssl host-xz
+ 
+-HOST_MENDER_ARTIFACT_DEPENDENCIES = host-xz
++HOST_MENDER_ARTIFACT_GO_ENV += \
++	PATH=$(BR_PATH) \
++	PKG_CONFIG="$(PKG_CONFIG_HOST_BINARY)" \
++	PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 \
++	PKG_CONFIG_ALLOW_SYSTEM_LIBS=1 \
++	PKG_CONFIG_LIBDIR="$(HOST_DIR)/lib/pkgconfig:$(HOST_DIR)/share/pkgconfig" \
++	PKG_CONFIG_PATH="$(HOST_DIR)/lib/pkgconfig" \
++	PKG_CONFIG_SYSROOT_DIR="/"
+ 
+ HOST_MENDER_ARTIFACT_LDFLAGS = -X github.com/mendersoftware/mender-artifact/cli.Version=$(HOST_MENDER_ARTIFACT_VERSION)
+ 
+diff --git a/package/mender-connect/mender-connect.hash b/package/mender-connect/mender-connect.hash
+index da4ec5fbbd..0712e38260 100644
+--- a/package/mender-connect/mender-connect.hash
++++ b/package/mender-connect/mender-connect.hash
+@@ -1,13 +1,13 @@
+ # Locally computed:
+-sha256  96b81bb4c72eb8c1756febb94101c0dea5a6d4884591824e61a5f2509cd9ca9b  mender-connect-2.1.0.tar.gz
+-sha256  78b3954421ec6499c3f9735b96d52288574ae80c747416a52548d7f526f26e8c  LIC_FILES_CHKSUM.sha256
++sha256  397cc1dab70e6e33713c7c7e826b09312949299608f4c1d41f7acd29b9693e92  mender-connect-2.1.1.tar.gz
++sha256  ace94839998c417db1e61034b316f343a25272cbefeacb29b65735157ebe3d57  LIC_FILES_CHKSUM.sha256
+ 
+ # Vendor licenses
+ # Generated with sed '/^[A-Za-z0-9_]/s/^/sha256  /' LIC_FILES_CHKSUM.sha256
+ 
+ #
+ # Apache-2.0
+-sha256  1033348db7606a7e61b6484f293847cf8d7a35766efebb97e304d4bd5d7f3f6b  LICENSE
++sha256  52b2497ce07650b825015e80ca7a5d40c360c04c530234ca6d950b0f98bca23a  LICENSE
+ sha256  3eb823230e5d112e1bd032ccc82ae765cf676d0d6d46a1a1daa2d658b3005b67  vendor/github.com/mendersoftware/go-lib-micro/LICENSE
+ #
+ # BSD-2-Clause
+diff --git a/package/mender-connect/mender-connect.mk b/package/mender-connect/mender-connect.mk
+index 36ddd5f7db..52a4077ab8 100644
+--- a/package/mender-connect/mender-connect.mk
++++ b/package/mender-connect/mender-connect.mk
+@@ -4,7 +4,7 @@
+ #
+ ################################################################################
+ 
+-MENDER_CONNECT_VERSION = 2.1.0
++MENDER_CONNECT_VERSION = 2.1.1
+ MENDER_CONNECT_SITE = $(call github,mendersoftware,mender-connect,$(MENDER_CONNECT_VERSION))
+ MENDER_CONNECT_LICENSE = Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MIT
+ 
+diff --git a/package/mender-grubenv/mender-grubenv.hash b/package/mender-grubenv/mender-grubenv.hash
+index 193bff073b..d44220eadd 100644
+--- a/package/mender-grubenv/mender-grubenv.hash
++++ b/package/mender-grubenv/mender-grubenv.hash
+@@ -1,3 +1,3 @@
+ # Locally computed
+-sha256  b7a08eb3d996afb38c1a4f7c51b7eb44aec6197ff713ce75e4f39d5b448cfc82  mender-grubenv-2ac898f5924d5870f8394ad8ecd3ef1ab1422e3b.tar.gz
+-sha256  1033348db7606a7e61b6484f293847cf8d7a35766efebb97e304d4bd5d7f3f6b  LICENSE
++sha256  5232988ff3063a5132099807fcc7da9b70f0bf50a5396f763f4113a80284dff8  mender-grubenv-64e32b01d1bf54784d2a290ad0469c583e843864.tar.gz
++sha256  52b2497ce07650b825015e80ca7a5d40c360c04c530234ca6d950b0f98bca23a  LICENSE
+diff --git a/package/mender-grubenv/mender-grubenv.mk b/package/mender-grubenv/mender-grubenv.mk
+index 8679ad9236..e733ca592c 100644
+--- a/package/mender-grubenv/mender-grubenv.mk
++++ b/package/mender-grubenv/mender-grubenv.mk
+@@ -4,14 +4,13 @@
+ #
+ ################################################################################
+ 
+-MENDER_GRUBENV_VERSION = 2ac898f5924d5870f8394ad8ecd3ef1ab1422e3b
++MENDER_GRUBENV_VERSION = 64e32b01d1bf54784d2a290ad0469c583e843864
+ MENDER_GRUBENV_SITE = $(call github,mendersoftware,grub-mender-grubenv,$(MENDER_GRUBENV_VERSION))
+ MENDER_GRUBENV_LICENSE = Apache-2.0
+ MENDER_GRUBENV_LICENSE_FILES = LICENSE
+ # Grub2 must be built first so this package can overwrite the config files
+ # provided by grub.
+ MENDER_GRUBENV_DEPENDENCIES = grub2
+-MENDER_GRUBENV_INSTALL_IMAGES = YES
+ 
+ MENDER_GRUBENV_MAKE_ENV = \
+ 	$(TARGET_CONFIGURE_OPTS) \
+@@ -30,16 +29,17 @@ MENDER_GRUBENV_MODULES_MISSING_PC = \
+ 	$(filter-out $(call qstrip,$(BR2_TARGET_GRUB2_BUILTIN_MODULES_PC)),\
+ 		$(MENDER_GRUBENV_MANDATORY_MODULES))
+ 
+-MENDER_GRUBENV_MAKE_ENV += BOOT_DIR=/boot/grub
++MENDER_GRUBENV_MAKE_ENV += BOOT_DIR=/boot
+ 
+ define MENDER_GRUBENV_INSTALL_I386_CFG
+ 	mkdir -p $(BINARIES_DIR)/boot-part/grub
+-	cp -dpfr $(@D)/mender_grub.cfg \
++	cp -dpfr $(MENDER_GRUBENV_BUILDDIR)/mender_grub.cfg \
+ 		$(TARGET_DIR)/boot/grub/grub.cfg
+ 	cp -dpfr $(TARGET_DIR)/boot/grub/grub.cfg \
+-		$(TARGET_DIR)/boot/grub/grub-mender-grubenv \
++		$(TARGET_DIR)/boot/grub-mender-grubenv \
+ 		$(BINARIES_DIR)/boot-part/
+ endef
++MENDER_GRUBENV_TARGET_FINALIZE_HOOKS += MENDER_GRUBENV_INSTALL_I386_CFG
+ endif # BR2_TARGET_GRUB2_HAS_LEGACY_BOOT
+ 
+ ifeq ($(BR2_TARGET_GRUB2_HAS_EFI_BOOT),y)
+@@ -51,13 +51,14 @@ MENDER_GRUBENV_MAKE_ENV += BOOT_DIR=/boot/EFI/BOOT
+ 
+ define MENDER_GRUBENV_INSTALL_EFI_CFG
+ 	mkdir -p $(BINARIES_DIR)/efi-part/EFI/BOOT
+-	cp -dpfr $(@D)/mender_grub.cfg \
++	cp -dpfr $(MENDER_GRUBENV_BUILDDIR)/mender_grub.cfg \
+ 		$(TARGET_DIR)/boot/EFI/BOOT/grub.cfg
+ 	cp -dpfr $(TARGET_DIR)/boot/EFI/BOOT/grub.cfg \
+ 		$(BINARIES_DIR)/efi-part/EFI/BOOT
+ 	cp -dpfr $(TARGET_DIR)/boot/EFI/BOOT/grub-mender-grubenv \
+ 		$(BINARIES_DIR)/efi-part/
+ endef
++MENDER_GRUBENV_TARGET_FINALIZE_HOOKS += MENDER_GRUBENV_INSTALL_EFI_CFG
+ endif # BR2_TARGET_GRUB2_HAS_EFI_BOOT
+ 
+ ifeq ($(BR2_PACKAGE_MENDER_GRUBENV)$(BR_BUILDING),yy)
+@@ -86,9 +87,4 @@ define MENDER_GRUBENV_INSTALL_TARGET_CMDS
+ 	echo 'ENV_DIR=/boot/grub-mender-grubenv' > $(TARGET_DIR)/etc/mender_grubenv.config
+ endef
+ 
+-define MENDER_GRUBENV_INSTALL_IMAGES_CMDS
+-	$(MENDER_GRUBENV_INSTALL_I386_CFG)
+-	$(MENDER_GRUBENV_INSTALL_EFI_CFG)
+-endef
+-
+ $(eval $(generic-package))
+diff --git a/package/mender/artifact_info b/package/mender/artifact_info
+deleted file mode 100644
+index 1c84b088d0..0000000000
+--- a/package/mender/artifact_info
++++ /dev/null
+@@ -1 +0,0 @@
+-artifact_name=BUILDROOT_ARTIFACT
+diff --git a/package/mender/mender.conf b/package/mender/mender.conf
+index f89118ac1b..65b2781366 100644
+--- a/package/mender/mender.conf
++++ b/package/mender/mender.conf
+@@ -4,6 +4,7 @@
+   "RetryPollIntervalSeconds": 300,
+   "RootfsPartA": "/dev/mmcblk0p2",
+   "RootfsPartB": "/dev/mmcblk0p3",
++  "DeviceTypeFile": "/etc/mender/device_type",
+   "ServerCertificate": "/etc/mender/server.crt",
+   "ServerURL": "https://docker.mender.io",
+   "TenantToken": "dummy"
+diff --git a/package/mender/mender.hash b/package/mender/mender.hash
+index d563dc534b..0e2a13f8e2 100644
+--- a/package/mender/mender.hash
++++ b/package/mender/mender.hash
+@@ -1,12 +1,12 @@
+ # Locally computed:
+-sha256  8a149b11b990beb7620b372023eec28df63cee6a1aa4132e88ecef554f080f72  mender-3.4.0.tar.gz
++sha256  12f26337407adf6bd1b4f54d2be4e5c1e3a5c8d977ad4d18fbe9ac4398da1e2d  mender-3.5.1.tar.gz
+ 
+ # Vendor licenses
+ # Generated with sed '/^[A-Za-z0-9_]/s/^/sha256  /' LIC_FILES_CHKSUM.sha256
+ 
+ # Apache-2.0 license.
+-sha256  1033348db7606a7e61b6484f293847cf8d7a35766efebb97e304d4bd5d7f3f6b  LICENSE
+-sha256  1033348db7606a7e61b6484f293847cf8d7a35766efebb97e304d4bd5d7f3f6b  vendor/github.com/mendersoftware/mender-artifact/LICENSE
++sha256  52b2497ce07650b825015e80ca7a5d40c360c04c530234ca6d950b0f98bca23a  LICENSE
++sha256  52b2497ce07650b825015e80ca7a5d40c360c04c530234ca6d950b0f98bca23a  vendor/github.com/mendersoftware/mender-artifact/LICENSE
+ sha256  73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68  vendor/github.com/mendersoftware/openssl/LICENSE
+ sha256  cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30  vendor/github.com/minio/sha256-simd/LICENSE
+ sha256  8f5d89b47d7a05a199b77b7e0f362dad391d451ebda4ef48ba11c50c071564c7  vendor/github.com/mendersoftware/progressbar/LICENSE
+@@ -29,6 +29,8 @@ sha256  1b93a317849ee09d3d7e4f1d20c2b78ddb230b4becb12d7c224c927b9d470251  vendor
+ #
+ # MIT license.
+ sha256  6d2de1cde19c4d2bd8bcd9aaa1d581f4cfa3db9cf71896140330eaa2f2687685  vendor/github.com/klauspost/pgzip/LICENSE
++sha256  f69f157b0be75da373605dbc8bbf142e8924ee82d8f44f11bcaf351335bf98cf  vendor/github.com/klauspost/compress/internal/snapref/LICENSE
++sha256  f566a9f97bacdaf00d9f21dd991e81dc11201c4e016c86b470799429a1c9a79c  vendor/github.com/klauspost/compress/zstd/internal/xxhash/LICENSE.txt
+ sha256  5d966570d7a442d4e969892860a914e542c97f262c873baee8f0aa48e1f40212  vendor/github.com/klauspost/cpuid/v2/LICENSE
+ sha256  51a0c9ec7f8b7634181b8d4c03e5b5d204ac21d6e72f46c313973424664b2e6b  vendor/github.com/sirupsen/logrus/LICENSE
+ sha256  f8e536c1c7b695810427095dc85f5f80d44ff7c10535e8a9486cf393e2599189  vendor/github.com/stretchr/testify/LICENSE
+@@ -42,4 +44,4 @@ sha256  08eab1118c80885fa1fa6a6dd7303f65a379fcb3733e063d20d1bbc2c76e6fa1  vendor
+ sha256  310fe25c858a9515fc8c8d7d1f24a67c9496f84a91e0a0e41ea9975b1371e569  vendor/github.com/bmatsuo/lmdb-go/LICENSE.mdb.md
+ 
+ # sha256 of all the vendor licenses combined
+-sha256  93d9db9b43097b174e362ac8f398aa9a37fcdde2974d0567b62bd6d1e0d22037  LIC_FILES_CHKSUM.sha256
++sha256  f6450978cef1c67078918fdebe21bbedf13a18a32537a071c755e2f2def3af16  LIC_FILES_CHKSUM.sha256
+diff --git a/package/mender/mender.mk b/package/mender/mender.mk
+index ee1398244b..dc1f545f40 100644
+--- a/package/mender/mender.mk
++++ b/package/mender/mender.mk
+@@ -4,7 +4,7 @@
+ #
+ ################################################################################
+ 
+-MENDER_VERSION = 3.4.0
++MENDER_VERSION = 3.5.1
+ MENDER_SITE = $(call github,mendersoftware,mender,$(MENDER_VERSION))
+ MENDER_LICENSE = Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MIT, OLDAP-2.8
+ MENDER_CPE_ID_VENDOR = northern.tech
+@@ -14,30 +14,32 @@ MENDER_CPE_ID_VENDOR = northern.tech
+ MENDER_LICENSE_FILES = \
+ 	LICENSE \
+ 	LIC_FILES_CHKSUM.sha256 \
++	vendor/github.com/bmatsuo/lmdb-go/LICENSE.md \
++	vendor/github.com/bmatsuo/lmdb-go/LICENSE.mdb.md \
++	vendor/github.com/davecgh/go-spew/LICENSE \
++	vendor/github.com/godbus/dbus/LICENSE \
++	vendor/github.com/gorilla/websocket/LICENSE \
++	vendor/github.com/klauspost/compress/internal/snapref/LICENSE \
++	vendor/github.com/klauspost/compress/LICENSE \
++	vendor/github.com/klauspost/compress/zstd/internal/xxhash/LICENSE.txt \
++	vendor/github.com/klauspost/cpuid/v2/LICENSE \
++	vendor/github.com/klauspost/pgzip/LICENSE \
++	vendor/github.com/mattn/go-isatty/LICENSE \
+ 	vendor/github.com/mendersoftware/mender-artifact/LICENSE \
+ 	vendor/github.com/mendersoftware/openssl/LICENSE \
+-	vendor/github.com/minio/sha256-simd/LICENSE \
+ 	vendor/github.com/mendersoftware/progressbar/LICENSE \
++	vendor/github.com/minio/sha256-simd/LICENSE \
+ 	vendor/github.com/pkg/errors/LICENSE \
+-	vendor/github.com/godbus/dbus/LICENSE \
+-	vendor/github.com/gorilla/websocket/LICENSE \
+-	vendor/github.com/klauspost/compress/LICENSE \
+ 	vendor/github.com/pmezard/go-difflib/LICENSE \
+-	vendor/golang.org/x/sys/LICENSE \
+-	vendor/github.com/bmatsuo/lmdb-go/LICENSE.md \
+ 	vendor/github.com/remyoudompheng/go-liblzma/LICENSE \
+-	vendor/golang.org/x/term/LICENSE \
+-	vendor/github.com/davecgh/go-spew/LICENSE \
+-	vendor/github.com/klauspost/pgzip/LICENSE \
+-	vendor/github.com/klauspost/cpuid/v2/LICENSE \
+ 	vendor/github.com/sirupsen/logrus/LICENSE \
++	vendor/github.com/stretchr/objx/LICENSE \
+ 	vendor/github.com/stretchr/testify/LICENSE \
+ 	vendor/github.com/ungerik/go-sysfs/LICENSE \
+ 	vendor/github.com/urfave/cli/v2/LICENSE \
+-	vendor/github.com/stretchr/objx/LICENSE \
+-	vendor/gopkg.in/yaml.v3/LICENSE \
+-	vendor/github.com/mattn/go-isatty/LICENSE \
+-	vendor/github.com/bmatsuo/lmdb-go/LICENSE.mdb.md
++	vendor/golang.org/x/sys/LICENSE \
++	vendor/golang.org/x/term/LICENSE \
++	vendor/gopkg.in/yaml.v3/LICENSE
+ 
+ MENDER_DEPENDENCIES = host-pkgconf openssl
+ 
+@@ -66,13 +68,11 @@ define MENDER_INSTALL_CONFIG_FILES
+ 			$(TARGET_DIR)/usr/share/mender/inventory/mender-inventory-$(f)
+ 	)
+ 
+-	$(INSTALL) -D -m 0755 $(MENDER_PKGDIR)/artifact_info \
+-			$(TARGET_DIR)/etc/mender/artifact_info
+-
+ 	$(INSTALL) -D -m 0755 $(MENDER_PKGDIR)/device_type \
+ 			$(TARGET_DIR)/etc/mender/device_type
+ 
+ 	mkdir -p $(TARGET_DIR)/var/lib
++	rm -rf $(TARGET_DIR)/var/lib/mender
+ 	ln -snf /var/run/mender $(TARGET_DIR)/var/lib/mender
+ 	$(foreach f,$(MENDER_UPDATE_MODULES_FILES), \
+ 		$(INSTALL) -D -m 0755 $(@D)/support/modules/$(notdir $(f)) \
+diff --git a/support/testing/tests/package/test_mender.py b/support/testing/tests/package/test_mender.py
+index fdf55ed616..203a3da863 100644
+--- a/support/testing/tests/package/test_mender.py
++++ b/support/testing/tests/package/test_mender.py
+@@ -8,8 +8,11 @@ class TestMender(infra.basetest.BRTest):
+         """
+         BR2_PACKAGE_MENDER=y
+         BR2_TARGET_ROOTFS_CPIO=y
++        BR2_ROOTFS_POST_BUILD_SCRIPT="{}"
+         BR2_ROOTFS_OVERLAY="{}"
++        BR2_PACKAGE_HOST_MENDER_ARTIFACT=y
+         """.format(
++           infra.filepath("tests/package/test_mender/post-build.sh"),
+            # overlay to add a fake 'fw_printenv', used by Mender
+            infra.filepath("tests/package/test_mender/rootfs-overlay"))
+ 
+diff --git a/support/testing/tests/package/test_mender/post-build.sh b/support/testing/tests/package/test_mender/post-build.sh
+new file mode 100755
+index 0000000000..afc647ea74
+--- /dev/null
++++ b/support/testing/tests/package/test_mender/post-build.sh
+@@ -0,0 +1,24 @@
++#!/usr/bin/env bash
++set -e
++DEVICE_TYPE="buildroot-arm"
++ARTIFACT_NAME="RUNTIME_TEST_ARTIFACT_NAME"
++
++generate_mender_bootstrap_artifact() {
++  "${HOST_DIR}"/bin/mender-artifact \
++    write bootstrap-artifact \
++    --artifact-name "${ARTIFACT_NAME}" \
++    --device-type "${DEVICE_TYPE}" \
++    --provides "rootfs-image.version:${ARTIFACT_NAME}" \
++    --clears-provides "rootfs-image.*" \
++    --output-path "${TARGET_DIR}"/var/lib/mender/bootstrap.mender \
++    --version 3
++}
++
++function mender_fixup() {
++  rm -rf "${TARGET_DIR}"/var/lib/mender
++  mkdir -p "${TARGET_DIR}"/var/lib/mender
++}
++
++echo "device_type=${DEVICE_TYPE}" > "${TARGET_DIR}"/etc/mender/device_type
++mender_fixup
++generate_mender_bootstrap_artifact
+-- 
+2.43.0
+

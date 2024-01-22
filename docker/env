@@ -1,2 +1,0 @@
-# A colon deliminated list of environment files.
-ENV_FILES='beaglebone.json'

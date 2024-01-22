@@ -1,30 +1,11 @@
 #!/usr/bin/env python3
 import os
 import sys
-import argparse
 import signal
 from typing import List
+from lib.files import Files
 from lib.init_parse import InitParse
-
-
-def parse_args(args) -> argparse.Namespace:
-    """Parse arguments.
-
-    param args: an argument array
-    :return: The argument object.
-    :rtype: object
-    """
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "-e",
-        "--env-files",
-        type=str,
-        default="env.json",
-        help="A colon-eliminated list of environment files",
-    )
-
-    return parser.parse_args(args)
+from lib.logger import Logger
 
 
 def signal_handler(sig, _):
@@ -38,28 +19,58 @@ def signal_handler(sig, _):
         sys.exit(0)
 
 
-def main(args=None):
-    cwd = os.getcwd()
+class Init:
+    def run(self):
+        for env_file in self.env_files:
+            init = InitParse(
+                env_file, self.apply_configs, self.nb, self.clean_after_build
+            )
+            if not init.run():
+                sys.exit(-1)
+            os.chdir(self.cwd)
+
+    def check_env_files(self):
+        env_files: List[str] = os.environ.get("ENV_FILES", "x86_64.json").split(":")
+        if not env_files:
+            self.logger.error("No environment files defined!")
+            sys.exit(-1)
+
+        for i, _ in enumerate(env_files):
+            env_file = env_files[i].replace('"', "")
+            self.env_files.append(f"/mnt/docker/{env_file}")
+            if not Files.exists(self.env_files[i]):
+                self.logger.error(f"{self.env_files[i]}: No such file")
+                sys.exit(-1)
+
+    def parse_env(self):
+        self.apply_configs = os.environ.get("APPLY_CONFIGS", False)
+        self.clean_after_build = (
+            True
+            if os.environ.get("CLEAN_AFTER_BUILD", "false").lower() == "true"
+            else False
+        )
+        # NO_BUILD
+        self.nb = (
+            True if os.environ.get("NO_BUILD", "false").lower() == "true" else False
+        )
+        if self.nb:
+            self.logger.info("NO_BUILD environment variable set. Skipping build step!")
+        self.check_env_files()
+
+    def __init__(self):
+        self.logger = Logger(__name__)
+        self.cwd: str = os.getcwd()
+        self.env_files: List[str] = []
+        self.apply_configs: bool = False
+        self.clean_after_build: bool = False
+        self.nb: bool = False
+
+
+def main():
     signal.signal(signal.SIGINT, signal_handler)
-    args = parse_args(args)
-    env_files: List[str] = args.env_files.split(":")
-    init = None
-    for env_file in env_files:
-        if not os.path.isfile(env_file):
-            print("{}: No such file".format(env_file))
-            sys.exit(1)
-    if not env_files:
-        print("No environment files defined!")
-        sys.exit(1)
-    for env_file in env_files:
-        init = InitParse(env_file)
-        if not init.run():
-            sys.exit(1)
-        os.chdir(cwd)
-    if init:
-        if init.exit:
-            print("######## Exiting ########")
-            sys.exit(2)
+    init = Init()
+    init.parse_env()
+    init.run()
     sys.exit(0)
 
 

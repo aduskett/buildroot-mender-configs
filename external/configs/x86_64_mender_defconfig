@@ -26,7 +26,7 @@ BR2_PACKAGE_HOST_MTOOLS=y
 # Bootloader
 BR2_TARGET_GRUB2=y
 BR2_TARGET_GRUB2_X86_64_EFI=y
-BR2_TARGET_GRUB2_BUILTIN_MODULES="boot linux ext2 fat squash4 part_msdos part_gpt normal efi_gop loadenv hashsum echo halt gcry_sha256 test regexp"
+BR2_TARGET_GRUB2_BUILTIN_MODULES_EFI="boot linux ext2 fat squash4 part_msdos part_gpt normal efi_gop loadenv hashsum echo halt gcry_sha256 test regexp"
 BR2_TARGET_GRUB2_INSTALL_TOOLS=y
 
 # Required tools to create a mender image
@@ -42,7 +42,7 @@ BR2_TARGET_ROOTFS_EXT2_MKFS_OPTIONS="-O 64bit"
 BR2_ROOTFS_OVERLAY="external/board/x86_64/overlay"
 BR2_ROOTFS_POST_BUILD_SCRIPT="external/board/x86_64/post-build.sh"
 BR2_ROOTFS_POST_IMAGE_SCRIPT="external/board/x86_64/post-image-efi.sh"
-BR2_ROOTFS_POST_SCRIPT_ARGS="--data-part-size=32M --device-type=buildroot-x86_64 --generate-mender-image=true --artifact-name=2021.02.1"
+BR2_ROOTFS_POST_SCRIPT_ARGS="--data-part-size=32M --device-type=buildroot-x86_64 --generate-mender-image=true --artifact-name=2023.11.1"
 
 # Kernel
 BR2_LINUX_KERNEL=y

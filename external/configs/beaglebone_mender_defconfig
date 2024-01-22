@@ -17,10 +17,10 @@ BR2_SYSTEM_DEFAULT_PATH="/bin:/sbin:/usr/bin:/usr/sbin"
 BR2_ROOTFS_OVERLAY="external/board/beaglebone/overlay"
 BR2_ROOTFS_POST_BUILD_SCRIPT="external/board/beaglebone/post-build.sh"
 BR2_ROOTFS_POST_IMAGE_SCRIPT="external/board/beaglebone/post-image.sh"
-BR2_ROOTFS_POST_SCRIPT_ARGS="--device-type=beaglebone --build-version=2021.02.2 --generate-mender-image=true"
+BR2_ROOTFS_POST_SCRIPT_ARGS="--device-type=beaglebone --build-version=2023.11.1 --generate-mender-image=true"
 BR2_LINUX_KERNEL=y
 BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
-BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="$(call github,beagleboard,linux,5.4.106-ti-r31)/linux-5.4.106-ti-r31.tar.gz"
+BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="$(call github,beagleboard,linux,6.1.69-ti-r21)/linux-6.1.69-ti-r21.tar.gz"
 BR2_LINUX_KERNEL_DEFCONFIG="omap2plus"
 BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="external/board/beaglebone/linux_fragment"
 BR2_LINUX_KERNEL_DTS_SUPPORT=y

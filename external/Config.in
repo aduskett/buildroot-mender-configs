@@ -1,4 +1,0 @@
-menu "Networking applications"
-source "$BR2_EXTERNAL_EXTERN_PATH/package/mender-connect/Config.in"
-endmenu
-

@@ -1,0 +1,138 @@
+From e6afb8b8fc750c45d73b9a0177a845e92c38f53b Mon Sep 17 00:00:00 2001
+From: Adam Duskett <adam.duskett@amarulasolutions.com>
+Date: Thu, 18 Jan 2024 16:32:17 -0700
+Subject: [PATCH 1/1] raspberrypi 5 support
+
+Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
+---
+ arch/Config.in.arm              |  4 ++++
+ arch/arch.mk                    |  2 +-
+ board/raspberrypi/cmdline_5.txt |  1 +
+ board/raspberrypi/config_5.txt  | 14 ++++++++++++++
+ board/raspberrypi/readme.txt    |  6 ++++++
+ board/raspberrypi5              |  1 +
+ linux/linux.mk                  |  4 ++++
+ 7 files changed, 31 insertions(+), 1 deletion(-)
+ create mode 100644 board/raspberrypi/cmdline_5.txt
+ create mode 100644 board/raspberrypi/config_5.txt
+ create mode 120000 board/raspberrypi5
+
+diff --git a/arch/Config.in.arm b/arch/Config.in.arm
+index 78621e321c..b44a164e03 100644
+--- a/arch/Config.in.arm
++++ b/arch/Config.in.arm
+@@ -781,6 +781,9 @@ choice
+ config BR2_ARM64_PAGE_SIZE_4K
+ 	bool "4KB"
+ 
++config BR2_ARM64_PAGE_SIZE_16K
++	bool "16KB"
++
+ config BR2_ARM64_PAGE_SIZE_64K
+ 	bool "64KB"
+ 
+@@ -789,6 +792,7 @@ endchoice
+ config BR2_ARM64_PAGE_SIZE
+ 	string
+ 	default "4K" if BR2_ARM64_PAGE_SIZE_4K
++	default "16K" if BR2_ARM64_PAGE_SIZE_16K
+ 	default "64K" if BR2_ARM64_PAGE_SIZE_64K
+ 
+ config BR2_ARCH
+diff --git a/arch/arch.mk b/arch/arch.mk
+index 2e737b92ac..4174d33df5 100644
+--- a/arch/arch.mk
++++ b/arch/arch.mk
+@@ -23,7 +23,7 @@ ifeq ($(BR2_ARC_PAGE_SIZE_4K)$(BR2_ARM64_PAGE_SIZE_4K),y)
+ ARCH_TOOLCHAIN_WRAPPER_OPTS += -Wl,-z,max-page-size=4096 -Wl,-z,common-page-size=4096
+ else ifeq ($(BR2_ARC_PAGE_SIZE_8K),y)
+ ARCH_TOOLCHAIN_WRAPPER_OPTS += -Wl,-z,max-page-size=8192 -Wl,-z,common-page-size=8192
+-else ifeq ($(BR2_ARC_PAGE_SIZE_16K),y)
++else ifeq ($(BR2_ARC_PAGE_SIZE_16K)$(BR2_ARM64_PAGE_SIZE_16K),y)
+ ARCH_TOOLCHAIN_WRAPPER_OPTS += -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384
+ else ifeq ($(BR2_ARM64_PAGE_SIZE_64K),y)
+ ARCH_TOOLCHAIN_WRAPPER_OPTS += -Wl,-z,max-page-size=65536 -Wl,-z,common-page-size=65536
+diff --git a/board/raspberrypi/cmdline_5.txt b/board/raspberrypi/cmdline_5.txt
+new file mode 100644
+index 0000000000..ac457353e2
+--- /dev/null
++++ b/board/raspberrypi/cmdline_5.txt
+@@ -0,0 +1 @@
++root=/dev/mmcblk0p2 rootwait console=tty1 console=ttyAMA10,115200
+diff --git a/board/raspberrypi/config_5.txt b/board/raspberrypi/config_5.txt
+new file mode 100644
+index 0000000000..bbed19fe46
+--- /dev/null
++++ b/board/raspberrypi/config_5.txt
+@@ -0,0 +1,14 @@
++# Please note that this is only a sample, we recommend you to change it to fit
++# your needs.
++# You should override this file using BR2_PACKAGE_RPI_FIRMWARE_CONFIG_FILE.
++# See http://buildroot.org/manual.html#rootfs-custom
++# and http://elinux.org/RPiconfig for a description of config.txt syntax
++
++kernel=Image
++
++# To use an external initramfs file
++#initramfs rootfs.cpio.gz
++
++# Disable overscan assuming the display supports displaying the full resolution
++# If the text shown on the screen disappears off the edge, comment this out
++disable_overscan=1
+diff --git a/board/raspberrypi/readme.txt b/board/raspberrypi/readme.txt
+index 21a136eb83..cffd0f54ee 100644
+--- a/board/raspberrypi/readme.txt
++++ b/board/raspberrypi/readme.txt
+@@ -10,6 +10,7 @@ These instructions apply to all models of the Raspberry Pi:
+   - the model B3 (aka Raspberry Pi 3).
+   - the model B4 (aka Raspberry Pi 4).
+   - the model CM4 (aka Raspberry Pi Compute Module 4 and IO Board).
++  - the model B5 (aka Raspberry Pi 5).
+ 
+ How to build it
+ ===============
+@@ -60,6 +61,10 @@ or for CM4 (on IO Board - 64 bit):
+ 
+   $ make raspberrypicm4io_64_defconfig
+ 
++For model 5 B:
++
++  $ make raspberrypi5_defconfig
++
+ Build the rootfs
+ ----------------
+ 
+@@ -90,6 +95,7 @@ After building, you should obtain this tree:
+     +-- bcm2710-rpi-cm3.dtb         [1]
+     +-- bcm2711-rpi-4-b.dtb         [1]
+     +-- bcm2711-rpi-cm4.dtb         [1]
++    +-- bcm2712-rpi-5-b.dtb         [1]
+     +-- bcm2837-rpi-3-b.dtb         [1]
+     +-- boot.vfat
+     +-- rootfs.ext4
+diff --git a/board/raspberrypi5 b/board/raspberrypi5
+new file mode 120000
+index 0000000000..fcdafc81ed
+--- /dev/null
++++ b/board/raspberrypi5
+@@ -0,0 +1 @@
++raspberrypi
+\ No newline at end of file
+diff --git a/linux/linux.mk b/linux/linux.mk
+index 1db5c6046d..53e2ad6d48 100644
+--- a/linux/linux.mk
++++ b/linux/linux.mk
+@@ -411,6 +411,10 @@ define LINUX_KCONFIG_FIXUP_CMDS
+ 		$(call KCONFIG_ENABLE_OPT,CONFIG_ARM64_4K_PAGES)
+ 		$(call KCONFIG_DISABLE_OPT,CONFIG_ARM64_16K_PAGES)
+ 		$(call KCONFIG_DISABLE_OPT,CONFIG_ARM64_64K_PAGES))
++	$(if $(BR2_ARM64_PAGE_SIZE_16K),
++		$(call KCONFIG_DISABLE_OPT,CONFIG_ARM64_4K_PAGES)
++		$(call KCONFIG_ENABLE_OPT,CONFIG_ARM64_16K_PAGES)
++		$(call KCONFIG_DISABLE_OPT,CONFIG_ARM64_64K_PAGES))
+ 	$(if $(BR2_ARM64_PAGE_SIZE_64K),
+ 		$(call KCONFIG_DISABLE_OPT,CONFIG_ARM64_4K_PAGES)
+ 		$(call KCONFIG_DISABLE_OPT,CONFIG_ARM64_16K_PAGES)
+-- 
+2.43.0
+
